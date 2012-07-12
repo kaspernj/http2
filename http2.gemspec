@@ -25,6 +25,7 @@ Gem::Specification.new do |s|
     "README.rdoc",
     "Rakefile",
     "VERSION",
+    "http2.gemspec",
     "include/errors.rb",
     "include/response.rb",
     "include/utils.rb",
