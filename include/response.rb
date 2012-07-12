@@ -1,6 +1,8 @@
+#This object will be returned as the response for each request.
 class Http2::Response
   attr_reader :args
   
+  #This method should not be called manually.
   def initialize(args = {})
     @args = args
     @args[:headers] = {} if !@args.key?(:headers)
