@@ -156,13 +156,25 @@ class Http2
     end
   end
   
-  #Forces various stuff into arguments like URL.
+  #Forces various stuff into arguments-hash like URL from original arguments and enables single-string-shortcuts and more.
   def parse_args(*args)
     if args.length == 1 and args.first.is_a?(String)
-      return {:url => args.first}
+      args = {:url => args.first}
+    elsif args.length >= 2
+      raise "Couldnt parse arguments."
+    elsif args.is_a?(Array) and args.length == 1
+      args = args.first
+    else
+      raise "Invalid arguments: '#{args.class.name}'."
     end
     
-    return args.first
+    if args[:url].to_s.strip.empty?
+      raise "Empty URL given: '#{args[:url]}'."
+    elsif args[:url].to_s.split("\n").length > 1
+      raise "Multiple lines given in URL: '#{args[:url]}'."
+    end
+    
+    return args
   end
   
   #Returns a result-object based on the arguments.
@@ -170,7 +182,7 @@ class Http2
   # res = http.get("somepage.html")
   # print res.body #=> <String>-object containing the HTML gotten.
   def get(args)
-    args = parse_args(args)
+    args = self.parse_args(args)
     
     header_str = "GET /#{args[:url]} HTTP/1.1#{@nl}"
     header_str << self.header_str(self.default_headers(args), args)
@@ -447,7 +459,7 @@ class Http2
       break if line.to_s == ""
       
       if @mode == "headers" and line == @nl
-        print "Changing mode to body!\n" if @debug
+        print "Http2: Changing mode to body!\n" if @debug
         break if @length == 0
         @mode = "body"
         next
