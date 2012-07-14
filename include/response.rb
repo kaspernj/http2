@@ -1,5 +1,6 @@
 #This object will be returned as the response for each request.
 class Http2::Response
+  #All the data the response contains. Headers, body, cookies, requested URL and more.
   attr_reader :args
   
   #This method should not be called manually.
@@ -63,5 +64,13 @@ class Http2::Response
   # print "This body can be printed - its just plain text!" if http.contenttype == "text/plain"
   def contenttype
     return @args[:contenttype]
+  end
+  
+  #Returns the requested URL as a string.
+  #===Examples
+  # res.requested_url #=> "?show=status&action=getstatus"
+  def requested_url
+    raise "URL could not be detected." if !@args[:request_args][:url]
+    return @args[:request_args][:url]
   end
 end

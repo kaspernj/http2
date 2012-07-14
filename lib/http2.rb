@@ -162,7 +162,7 @@ class Http2
       return {:url => args.first}
     end
     
-    return args[0]
+    return args.first
   end
   
   #Returns a result-object based on the arguments.
@@ -314,7 +314,7 @@ class Http2
     args[:post].each do |key, val|
       praw << "--#{boundary}#{@nl}"
       
-      if val.class.name == "Tempfile" and val.respond_to?("original_filename")
+      if val.class.name.to_s == "Tempfile" and val.respond_to?(:original_filename)
         praw << "Content-Disposition: form-data; name=\"#{key}\"; filename=\"#{val.original_filename}\";#{@nl}"
         praw << "Content-Length: #{val.to_s.bytesize}#{@nl}"
       elsif val.is_a?(Hash) and val[:filename]
@@ -427,7 +427,7 @@ class Http2
   # res = http.read_response
   def read_response(args = {})
     @mode = "headers"
-    @resp = Http2::Response.new
+    @resp = Http2::Response.new(:request_args => args)
     
     loop do
       begin
