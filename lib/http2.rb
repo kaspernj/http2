@@ -335,7 +335,7 @@ class Http2
       praw << "Content-Type: text/plain#{@nl}"
       praw << @nl
       
-      if val.is_a?(StringIO)
+      if val.class.name.to_s == "StringIO"
         praw << val.read
       elsif val.is_a?(Hash) and val[:content]
         praw << val[:content].to_s
@@ -475,6 +475,7 @@ class Http2
     if @encoding == "gzip"
       require "zlib"
       require "iconv"
+      require "stringio"
       io = StringIO.new(@resp.args[:body])
       gz = Zlib::GzipReader.new(io)
       untrusted_str = gz.read
