@@ -90,4 +90,9 @@ describe "Http2" do
       #raise "Body was empty." if res.body.to_s.length <= 0
     end
   end
+  
+  it "should be able to convert URL's to 'is.gd'-short-urls" do
+    isgd = Http2.isgdlink("https://github.com/kaspernj/http2")
+    raise "Expected isgd-var to be 'http://is.gd/Z7kHSl' but it wasnt: '#{isgd}'." if isgd != "http://is.gd/Z7kHSl"
+  end
 end

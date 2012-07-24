@@ -16,6 +16,14 @@ class Http2
     return Http2.const_get(name)
   end
   
+  #Converts a URL to "is.gd"-short-URL.
+  def self.isgdlink(url)
+    Http2.new(:host => "is.gd") do |http|
+      resp = http.get("/api.php?longurl=#{url}")
+      return resp.body
+    end
+  end
+  
   attr_reader :cookies, :args
   
   def initialize(args = {})
