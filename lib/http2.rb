@@ -531,9 +531,13 @@ class Http2
         return http.get(url)
       end
     elsif resp.args[:code].to_s == "500"
-      raise Http2::Errors::Internalserver
+      err = Http2::Errors::Internalserver.new
+      err.response = resp
+      raise err
     elsif resp.args[:code].to_s == "403"
-      raise Http2::Errors::Noaccess
+      err = Http2::Errors::Noaccess.new
+      err.response = resp
+      raise err
     else
       return resp
     end
