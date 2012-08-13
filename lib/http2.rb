@@ -274,6 +274,8 @@ class Http2
     elsif pdata.is_a?(Array)
       count = 0
       pdata.each do |val|
+        praw << "&" if praw != ""
+        
         if args and args[:orig_key]
           key = "#{args[:orig_key]}[#{count}]"
         else

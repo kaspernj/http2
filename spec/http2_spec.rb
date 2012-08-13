@@ -10,7 +10,7 @@ describe "Http2" do
     res = Http2.post_convert_data(
       "test1" => [1, 2, 3]
     )
-    raise "Expected 'test1%5B0%5D=1test1%5B1%5D=2test1%5B2%5D=3' but got: '#{res}'." if res != "test1%5B0%5D=1test1%5B1%5D=2test1%5B2%5D=3"
+    raise "Expected 'test1%5B0%5D=1&test1%5B1%5D=2&test1%5B2%5D=3' but got: '#{res}'." if res != "test1%5B0%5D=1&test1%5B1%5D=2&test1%5B2%5D=3"
     
     res = Http2.post_convert_data(
       "test1" => {
@@ -45,7 +45,8 @@ describe "Http2" do
                 "val8" => "test8"
               }
             ]
-          }
+          },
+          "val9" => ["a", "b", "d"]
         })
         res = JSON.parse(resp.body)
         
@@ -55,6 +56,7 @@ describe "Http2" do
         raise "Error 3" if !res["val3"] or res["val3"][0] != "test3"
         raise "Error 4" if res["val4"]["val5"] != "test5"
         raise "Error 5" if res["val6"]["val7"][0]["val8"] != "test8"
+        raise "Array error: '#{res["val9"]}'." if res["val9"][0] != "a" or res["val9"][1] != "b" or res["val9"][2] != "d"
       end
     end
   end
