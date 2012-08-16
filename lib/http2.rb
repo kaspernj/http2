@@ -440,8 +440,8 @@ class Http2
     return headers_str
   end
   
-  def on_content_call(args, line)
-    args[:on_content].call(line) if args.key?(:on_content)
+  def on_content_call(args, str)
+    args[:on_content].call(str) if args.key?(:on_content)
   end
   
   #Reads the response after posting headers and data.
@@ -472,13 +472,13 @@ class Http2
         print "Http2: Changing mode to body!\n" if @debug
         break if @length == 0
         @mode = "body"
+        self.on_content_call(args, @nl)
         next
       end
       
       if @mode == "headers"
         self.parse_header(line, args)
       elsif @mode == "body"
-        self.on_content_call(args, "\r\n")
         stat = self.parse_body(line, args)
         break if stat == "break"
         next if stat == "next"
