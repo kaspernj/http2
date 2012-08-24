@@ -176,8 +176,8 @@ class Http2
       raise "Invalid arguments: '#{args.class.name}'."
     end
     
-    if args[:url].to_s.strip.empty?
-      raise "Empty URL given: '#{args[:url]}'."
+    if !args.key?(:url) or !args[:url]
+      raise "No URL given: '#{args[:url]}'."
     elsif args[:url].to_s.split("\n").length > 1
       raise "Multiple lines given in URL: '#{args[:url]}'."
     end
@@ -218,10 +218,10 @@ class Http2
     
     begin
       raise Errno::EPIPE, "The socket is closed." if !@sock or @sock.closed?
-      @sock.puts(str)
+      self.sock_puts(str)
     rescue Errno::EPIPE #this can also be thrown by puts.
       self.reconnect
-      @sock.puts(str)
+      self.sock_puts(str)
     end
     
     @request_last = Time.now
@@ -235,10 +235,16 @@ class Http2
     return args[:default_headers] if args[:default_headers]
     
     headers = {
-      "Host" => @args[:host],
       "Connection" => "Keep-Alive",
       "User-Agent" => @uagent
     }
+    
+    #Possible to give custom host-argument.
+    if args[:host]
+      headers["Host"] = args[:host]
+    else
+      headers["Host"] = @args[:host]
+    end
     
     if !@args.key?(:encoding_gzip) or @args[:encoding_gzip]
       headers["Accept-Encoding"] = "gzip"
@@ -401,7 +407,7 @@ class Http2
       File.open(praw.path, "r") do |fp|
         begin
           while data = fp.sysread(4096)
-            @sock.write(data)
+            self.sock_write(data)
           end
         rescue EOFError
           #ignore.
@@ -410,6 +416,17 @@ class Http2
       
       return self.read_response(args)
     end
+  end
+  
+  def sock_write(str)
+    str = str.to_s
+    return nil if str.empty?
+    count = @sock.write(str)
+    raise "Couldnt write to socket: '#{count}', '#{str}'." if count <= 0
+  end
+  
+  def sock_puts(str)
+    self.sock_write("#{str}#{@nl}")
   end
   
   #Returns a header-string which normally would be used for a request in the given state.
@@ -451,12 +468,21 @@ class Http2
     @mode = "headers"
     @resp = Http2::Response.new(:request_args => args)
     
+    rec_count = 0
+    
     loop do
       begin
         if @length and @length > 0 and @mode == "body"
           line = @sock.read(@length)
         else
           line = @sock.gets
+        end
+        
+        if line
+          rec_count += line.length
+        elsif !line and rec_count <= 0
+          @sock = nil
+          raise Errno::ECONNABORTED, "Server closed the connection before being able to read anything (KeepAliveMax: '#{@keepalive_max}', Connection: '#{@connection}', PID: '#{Process.pid}')."
         end
         
         print "<#{@mode}>: '#{line}'\n" if @debug
@@ -512,7 +538,7 @@ class Http2
     @resp = nil
     @mode = nil
     
-    raise "No status-code was received from the server.\n\nHeaders:\n#{resp.headers}\n\nBody:\n#{resp.args[:body]}" if !resp.args[:code]
+    raise "No status-code was received from the server. Headers: '#{resp.headers}' Body: '#{resp.args[:body]}'." if !resp.args[:code]
     
     if resp.args[:code].to_s == "302" and resp.header?("location") and (!@args.key?(:follow_redirects) or @args[:follow_redirects])
       require "uri"
