@@ -71,14 +71,14 @@ class Http2
   
   #Returns boolean based on the if the object is connected and the socket is working.
   #===Examples
-  # print "Socket is working." if http.socket_working?
+  # puts "Socket is working." if http.socket_working?
   def socket_working?
     return false if !@sock or @sock.closed?
     
     if @keepalive_timeout and @request_last
       between = Time.now.to_i - @request_last.to_i
       if between >= @keepalive_timeout
-        print "Http2: We are over the keepalive-wait - returning false for socket_working?.\n" if @debug
+        puts "Http2: We are over the keepalive-wait - returning false for socket_working?." if @debug
         return false
       end
     end
@@ -111,7 +111,7 @@ class Http2
   #Reconnects to the host.
   def reconnect
     require "socket"
-    print "Http2: Reconnect.\n" if @debug
+    puts "Http2: Reconnect." if @debug
     
     #Reset variables.
     @keepalive_max = nil
@@ -486,10 +486,14 @@ class Http2
         end
         
         print "<#{@mode}>: '#{line}'\n" if @debug
-      rescue Errno::ECONNRESET
-        print "Http2: The connection was reset while reading - breaking gently...\n" if @debug
-        @sock = nil
-        break
+      rescue Errno::ECONNRESET => e
+        if rec_count > 0
+          print "Http2: The connection was reset while reading - breaking gently...\n" if @debug
+          @sock = nil
+          break
+        else
+          raise Errno::ECONNABORTED, "Server closed the connection before being able to read anything (KeepAliveMax: '#{@keepalive_max}', Connection: '#{@connection}', PID: '#{Process.pid}')."
+        end
       end
       
       break if line.to_s == ""
