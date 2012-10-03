@@ -62,14 +62,14 @@ describe "Http2" do
   end
   
   it "should be able to do multipart-requests and keep-alive when using multipart." do
-    Http2.new(:host => "www.partyworm.dk", :follow_redirects => false) do |http|
+    Http2.new(:host => "www.partyworm.dk", :follow_redirects => false, :encoding_gzip => false, :debug => false) do |http|
       0.upto(5) do
         resp = http.post_multipart(:url => "multipart_test.php", :post => {
           "test_var" => "true"
         })
         
         if resp.body != "multipart-test-test_var=true"
-          raise "Expected body to be 'test_var=true' but it wasnt: '#{resp.body}'."
+          raise "Expected body to be 'multipart-test-test_var=true' but it wasnt: '#{resp.body}'."
         end
       end
     end

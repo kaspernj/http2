@@ -194,7 +194,7 @@ class Http2
     
     header_str = "GET /#{args[:url]} HTTP/1.1#{@nl}"
     header_str << self.header_str(self.default_headers(args), args)
-    header_str << "#{@nl}"
+    header_str << @nl
     
     @mutex.synchronize do
       print "Http2: Writing headers.\n" if @debug
@@ -218,10 +218,10 @@ class Http2
     
     begin
       raise Errno::EPIPE, "The socket is closed." if !@sock or @sock.closed?
-      self.sock_puts(str)
+      self.sock_write(str)
     rescue Errno::EPIPE #this can also be thrown by puts.
       self.reconnect
-      self.sock_puts(str)
+      self.sock_write(str)
     end
     
     @request_last = Time.now
@@ -316,8 +316,9 @@ class Http2
       
       header_str = "POST /#{args[:url]} HTTP/1.1#{@nl}"
       header_str << self.header_str(self.default_headers(args).merge("Content-Type" => "application/x-www-form-urlencoded", "Content-Length" => praw.length), args)
-      header_str << "#{@nl}"
+      header_str << @nl
       header_str << praw
+      header_str << @nl
       
       print "Header str: #{header_str}\n" if @debug
       
