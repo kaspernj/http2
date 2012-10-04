@@ -339,83 +339,79 @@ class Http2
     #Use tempfile to store contents to avoid eating memory if posting something really big.
     require "tempfile"
     
-    praw = Tempfile.open("http2_post_multipart_tmp_#{boundary}")
-    args[:post].each do |key, val|
-      praw << "--#{boundary}#{@nl}"
-      
-      if val.class.name.to_s == "Tempfile" and val.respond_to?(:original_filename)
-        praw << "Content-Disposition: form-data; name=\"#{key}\"; filename=\"#{val.original_filename}\";#{@nl}"
-        praw << "Content-Length: #{val.to_s.bytesize}#{@nl}"
-      elsif val.is_a?(Hash) and val[:filename]
-        praw << "Content-Disposition: form-data; name=\"#{key}\"; filename=\"#{val[:filename]}\";#{@nl}"
+    Tempfile.open("http2_post_multipart_tmp_#{boundary}") do |praw|
+      args[:post].each do |key, val|
+        praw << "--#{boundary}#{@nl}"
         
-        if val[:content]
-          praw << "Content-Length: #{val[:content].to_s.bytesize}#{@nl}"
-        elsif val[:fpath]
-          praw << "Content-Length: #{File.size(val[:fpath])}#{@nl}"
+        if val.class.name.to_s == "Tempfile" and val.respond_to?(:original_filename)
+          praw << "Content-Disposition: form-data; name=\"#{key}\"; filename=\"#{val.original_filename}\";#{@nl}"
+          praw << "Content-Length: #{val.to_s.bytesize}#{@nl}"
+        elsif val.is_a?(Hash) and val[:filename]
+          praw << "Content-Disposition: form-data; name=\"#{key}\"; filename=\"#{val[:filename]}\";#{@nl}"
+          
+          if val[:content]
+            praw << "Content-Length: #{val[:content].to_s.bytesize}#{@nl}"
+          elsif val[:fpath]
+            praw << "Content-Length: #{File.size(val[:fpath])}#{@nl}"
+          else
+            raise "Could not figure out where to get content from."
+          end
         else
-          raise "Could not figure out where to get content from."
+          praw << "Content-Disposition: form-data; name=\"#{key}\";#{@nl}"
+          praw << "Content-Length: #{val.to_s.bytesize}#{@nl}"
         end
-      else
-        praw << "Content-Disposition: form-data; name=\"#{key}\";#{@nl}"
-        praw << "Content-Length: #{val.to_s.bytesize}#{@nl}"
-      end
-      
-      praw << "Content-Type: text/plain#{@nl}"
-      praw << @nl
-      
-      if val.class.name.to_s == "StringIO"
-        praw << val.read
-      elsif val.is_a?(Hash) and val[:content]
-        praw << val[:content].to_s
-      elsif val.is_a?(Hash) and val[:fpath]
-        File.open(val[:fpath], "r") do |fp|
-          begin
-            while data = fp.sysread(4096)
-              praw << data
+        
+        praw << "Content-Type: text/plain#{@nl}"
+        praw << @nl
+        
+        if val.class.name.to_s == "StringIO"
+          praw << val.read
+        elsif val.is_a?(Hash) and val[:content]
+          praw << val[:content].to_s
+        elsif val.is_a?(Hash) and val[:fpath]
+          File.open(val[:fpath], "r") do |fp|
+            begin
+              while data = fp.sysread(4096)
+                praw << data
+              end
+            rescue EOFError
+              #ignore.
             end
-          rescue EOFError
-            #ignore.
           end
+        else
+          praw << val.to_s
         end
-      else
-        praw << val.to_s
+        
+        praw << @nl
       end
       
-      praw << @nl
-    end
-    
-    praw << "--#{boundary}--"
-    praw.close(false)
-    
-    
-    #Generate header-string containing 'praw'-variable.
-    header_str = "POST /#{args[:url]} HTTP/1.1#{@nl}"
-    header_str << self.header_str(self.default_headers(args).merge(
-      "Content-Type" => "multipart/form-data; boundary=#{boundary}",
-      "Content-Length" => praw.size
-    ), args)
-    header_str << @nl
-    
-    
-    #Debug.
-    print "Headerstr: #{header_str}\n" if @debug
-    
-    
-    #Write and return.
-    @mutex.synchronize do
-      self.write(header_str)
-      File.open(praw.path, "r") do |fp|
-        begin
-          while data = fp.sysread(4096)
-            self.sock_write(data)
-          end
-        rescue EOFError
-          #ignore.
-        end
-      end
+      praw << "--#{boundary}--"
       
-      return self.read_response(args)
+      
+      #Generate header-string containing 'praw'-variable.
+      header_str = "POST /#{args[:url]} HTTP/1.1#{@nl}"
+      header_str << self.header_str(self.default_headers(args).merge(
+        "Content-Type" => "multipart/form-data; boundary=#{boundary}",
+        "Content-Length" => praw.size
+      ), args)
+      header_str << @nl
+      
+      
+      #Debug.
+      print "Headerstr: #{header_str}\n" if @debug
+      
+      
+      #Write and return.
+      @mutex.synchronize do
+        self.write(header_str)
+        
+        praw.rewind
+        praw.lines do |data|
+          self.sock_write(data)
+        end
+        
+        return self.read_response(args)
+      end
     end
   end
   
@@ -532,8 +528,14 @@ class Http2
       io = StringIO.new(@resp.args[:body])
       gz = Zlib::GzipReader.new(io)
       untrusted_str = gz.read
-      ic = Iconv.new("UTF-8//IGNORE", "UTF-8")
-      valid_string = ic.iconv(untrusted_str + " ")[0..-2]
+      
+      begin
+        valid_string = ic.encode("utf-8")
+      rescue
+        ic = Iconv.new("UTF-8//IGNORE", "UTF-8")
+        valid_string = ic.iconv(untrusted_str + " ")[0..-2]
+      end
+      
       @resp.args[:body] = valid_string
     end
     

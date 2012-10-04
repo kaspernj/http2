@@ -64,13 +64,26 @@ describe "Http2" do
   it "should be able to do multipart-requests and keep-alive when using multipart." do
     Http2.new(:host => "www.partyworm.dk", :follow_redirects => false, :encoding_gzip => false, :debug => false) do |http|
       0.upto(5) do
+        fpath = File.realpath(__FILE__)
+        fpath2 = "#{File.realpath(File.dirname(__FILE__))}/../lib/http2.rb"
+        
         resp = http.post_multipart(:url => "multipart_test.php", :post => {
-          "test_var" => "true"
+          "test_var" => "true",
+          "test_file1" => {
+            :fpath => fpath,
+            :filename => "specfile"
+          },
+          "test_file2" => {
+            :fpath => fpath2,
+            :filename => "http2.rb"
+          }
         })
         
-        if resp.body != "multipart-test-test_var=true"
-          raise "Expected body to be 'multipart-test-test_var=true' but it wasnt: '#{resp.body}'."
-        end
+        data = JSON.parse(resp.body)
+        
+        raise "Expected 'test_var' post to be 'true' but it wasnt: '#{data["post"]["test_var"]}'." if data["post"]["test_var"] != "true"
+        raise "Expected 'test_file1' to be the same as file but it wasnt:\n#{data["files_data"]["test_file1"]}\n\n#{File.read(fpath)}" if data["files_data"]["test_file1"] != File.read(fpath)
+        raise "Expected 'test_file2' to be the same as file but it wasnt:\n#{data["files_data"]["test_file2"]}\n\n#{File.read(fpath)}" if data["files_data"]["test_file2"] != File.read(fpath2)
       end
     end
   end
