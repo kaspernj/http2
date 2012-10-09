@@ -57,6 +57,12 @@ class Http2
       @uagent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)"
     end
     
+    if !@args.key?(:raise_errors) or @args[:raise_errors]
+      @raise_errors = true
+    else
+      @raise_errors = false
+    end
+    
     raise "No host was given." if !@args[:host]
     self.reconnect
     
@@ -565,11 +571,11 @@ class Http2
         http = Http2.new(args)
         return http.get(url)
       end
-    elsif resp.args[:code].to_s == "500"
+    elsif @raise_errors and resp.args[:code].to_i == 500
       err = Http2::Errors::Internalserver.new(resp.body)
       err.response = resp
       raise err
-    elsif resp.args[:code].to_s == "403"
+    elsif @raise_errors and resp.args[:code].to_i == 403
       err = Http2::Errors::Noaccess.new(resp.body)
       err.response = resp
       raise err
