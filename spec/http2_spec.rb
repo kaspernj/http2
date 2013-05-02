@@ -108,6 +108,6 @@ describe "Http2" do
   
   it "should be able to convert URL's to 'is.gd'-short-urls" do
     isgd = Http2.isgdlink("https://github.com/kaspernj/http2")
-    raise "Expected isgd-var to be 'http://is.gd/Z7kHSl' but it wasnt: '#{isgd}'." if isgd != "http://is.gd/Z7kHSl"
+    raise "Expected isgd-var to be valid but it wasnt: '#{isgd}'." if !isgd.match(/^http:\/\/is\.gd\/([A-z\d]+)$/)
   end
 end

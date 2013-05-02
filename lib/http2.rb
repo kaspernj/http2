@@ -26,13 +26,19 @@ class Http2
   
   attr_reader :cookies, :args
   
+  VALID_ARGUMENTS_INITIALIZE = [:host, :port, :ssl, :nl, :user_agent, :raise_errors, :follow_redirects, :debug, :encoding_gzip, :autostate]
   def initialize(args = {})
     args = {:host => args} if args.is_a?(String)
     raise "Arguments wasnt a hash." if !args.is_a?(Hash)
     
+    args.each do |key, val|
+      raise "Invalid key: '#{key}'." if !VALID_ARGUMENTS_INITIALIZE.include?(key)
+    end
+    
     @args = args
     @cookies = {}
     @debug = @args[:debug]
+    @autostate_values = {} if @args[:autostate]
     
     require "monitor"
     @mutex = Monitor.new
@@ -309,16 +315,23 @@ class Http2
     return praw
   end
   
+  VALID_ARGUMENTS_POST = [:post, :url]
   #Posts to a certain page.
   #===Examples
   # res = http.post("login.php", {"username" => "John Doe", "password" => 123)
   def post(args)
+    args.each do |key, val|
+      raise "Invalid key: '#{key}'." if !VALID_ARGUMENTS_POST.include?(key)
+    end
+    
     args = self.parse_args(args)
+    phash = args[:post] ? args[:post].clone : {}
+    autostate_set_on_post_hash(phash) if @args[:autostate]
     
     @mutex.synchronize do
       print "Doing post.\n" if @debug
       
-      praw = Http2.post_convert_data(args[:post])
+      praw = Http2.post_convert_data(phash)
       
       header_str = "POST /#{args[:url]} HTTP/1.1#{@nl}"
       header_str << self.header_str(self.default_headers(args).merge("Content-Type" => "application/x-www-form-urlencoded", "Content-Length" => praw.length), args)
@@ -339,6 +352,9 @@ class Http2
   def post_multipart(*args)
     args = self.parse_args(*args)
     
+    phash = args[:post].clone
+    autostate_set_on_post_hash(phash) if @args[:autostate]
+    
     #Generate random string.
     boundary = rand(36**50).to_s(36)
     
@@ -346,7 +362,7 @@ class Http2
     require "tempfile"
     
     Tempfile.open("http2_post_multipart_tmp_#{boundary}") do |praw|
-      args[:post].each do |key, val|
+      phash.each do |key, val|
         praw << "--#{boundary}#{@nl}"
         
         if val.class.name.to_s == "Tempfile" and val.respond_to?(:original_filename)
@@ -580,6 +596,8 @@ class Http2
       err.response = resp
       raise err
     else
+      autostate_register(resp) if @args[:autostate]
+      
       return resp
     end
   end
@@ -671,5 +689,29 @@ class Http2
     else
       raise "Dont know how to read HTTP version: '#{@resp.args[:http_version]}'."
     end
+  end
+  
+  private
+  
+  #Registers the states from a result.
+  def autostate_register(res)
+    puts "Http2: Running autostate-register on result." if @debug
+    @autostate_values.clear
+    
+    res.body.to_s.scan(/<input type="hidden" name="__(EVENTTARGET|EVENTARGUMENT|VIEWSTATE|LASTFOCUS)" id="(.*?)" value="(.*?)" \/>/) do |match|
+      name = "__#{match[0]}"
+      id = match[1]
+      value = match[2]
+      
+      puts "Http2: Registered autostate-value with name '#{name}' and value '#{value}'." if @debug
+      @autostate_values[name] = Http2::Utils.urldec(value)
+    end
+    
+    raise "No states could be found." if @autostate_values.empty?
+  end
+  
+  #Sets the states on the given post-hash.
+  def autostate_set_on_post_hash(phash)
+    phash.merge!(@autostate_values)
   end
 end
