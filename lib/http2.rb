@@ -26,7 +26,7 @@ class Http2
   
   attr_reader :cookies, :args
   
-  VALID_ARGUMENTS_INITIALIZE = [:host, :port, :ssl, :nl, :user_agent, :raise_errors, :follow_redirects, :debug, :encoding_gzip, :autostate]
+  VALID_ARGUMENTS_INITIALIZE = [:host, :port, :ssl, :nl, :user_agent, :raise_errors, :follow_redirects, :debug, :encoding_gzip, :autostate, :basic_auth, :extra_headers]
   def initialize(args = {})
     args = {:host => args} if args.is_a?(String)
     raise "Arguments wasnt a hash." if !args.is_a?(Hash)
@@ -40,7 +40,7 @@ class Http2
     @debug = @args[:debug]
     @autostate_values = {} if @args[:autostate]
     
-    require "monitor"
+    require "monitor" unless ::Kernel.const_defined?(:Monitor)
     @mutex = Monitor.new
     
     if !@args[:port]
@@ -79,6 +79,20 @@ class Http2
         self.destroy
       end
     end
+  end
+  
+  #Closes current connection if any, changes the arguments on the object and reconnects keeping all cookies and other stuff intact.
+  def change(args)
+    self.close
+    @args.merge!(args)
+    self.reconnect
+  end
+  
+  #Closes the current connection if any.
+  def close
+    @sock.close if @sock and !@sock.closed?
+    @sock_ssl.close if @sock_ssl and !@sock_ssl.closed?
+    @sock_plain.close if @sock_plain and !@sock_plain.closed?
   end
   
   #Returns boolean based on the if the object is connected and the socket is working.
@@ -161,7 +175,7 @@ class Http2
     
     if @args[:ssl]
       print "Http2: Initializing SSL.\n" if @debug
-      require "openssl"
+      require "openssl" unless ::Kernel.const_defined?(:OpenSSL)
       
       ssl_context = OpenSSL::SSL::SSLContext.new
       #ssl_context.verify_mode = OpenSSL::SSL::VERIFY_PEER
@@ -265,7 +279,16 @@ class Http2
     end
     
     if @args[:basic_auth]
-      headers["Authorization"] = "Basic #{Base64.encode64("#{@args[:basic_auth][:user]}:#{@args[:basic_auth][:passwd]}")}"
+      require "base64" unless ::Kernel.const_defined?(:Base64)
+      headers["Authorization"] = "Basic #{Base64.encode64("#{@args[:basic_auth][:user]}:#{@args[:basic_auth][:passwd]}").strip}"
+    end
+    
+    if @args[:extra_headers]
+      headers.merge!(@args[:extra_headers])
+    end
+    
+    if args[:headers]
+      headers.merge!(args[:headers])
     end
     
     return headers
@@ -315,7 +338,7 @@ class Http2
     return praw
   end
   
-  VALID_ARGUMENTS_POST = [:post, :url]
+  VALID_ARGUMENTS_POST = [:post, :url, :headers, :json]
   #Posts to a certain page.
   #===Examples
   # res = http.post("login.php", {"username" => "John Doe", "password" => 123)
@@ -325,21 +348,30 @@ class Http2
     end
     
     args = self.parse_args(args)
-    phash = args[:post] ? args[:post].clone : {}
-    autostate_set_on_post_hash(phash) if @args[:autostate]
+    content_type = "application/x-www-form-urlencoded"
+    
+    if args[:json]
+      require "json" unless ::Kernel.const_defined?(:JSON)
+      praw = JSON.generate(args[:json])
+      content_type = "application/json"
+    elsif args[:post].is_a?(String)
+      praw = args[:post]
+    else
+      phash = args[:post] ? args[:post].clone : {}
+      autostate_set_on_post_hash(phash) if @args[:autostate]
+      praw = Http2.post_convert_data(phash)
+    end
     
     @mutex.synchronize do
-      print "Doing post.\n" if @debug
-      
-      praw = Http2.post_convert_data(phash)
+      puts "Doing post." if @debug
       
       header_str = "POST /#{args[:url]} HTTP/1.1#{@nl}"
-      header_str << self.header_str(self.default_headers(args).merge("Content-Type" => "application/x-www-form-urlencoded", "Content-Length" => praw.length), args)
+      header_str << self.header_str({"Content-Length" => praw.length, "Content-Type" => content_type}.merge(self.default_headers(args)), args)
       header_str << @nl
       header_str << praw
       header_str << @nl
       
-      print "Header str: #{header_str}\n" if @debug
+      puts "Header str: #{header_str}" if @debug
       
       self.write(header_str)
       return self.read_response(args)
@@ -569,7 +601,7 @@ class Http2
     
     raise "No status-code was received from the server. Headers: '#{resp.headers}' Body: '#{resp.args[:body]}'." if !resp.args[:code]
     
-    if resp.args[:code].to_s == "302" and resp.header?("location") and (!@args.key?(:follow_redirects) or @args[:follow_redirects])
+    if (resp.args[:code].to_s == "302" || resp.args[:code].to_s == "307") and resp.header?("location") and (!@args.key?(:follow_redirects) or @args[:follow_redirects])
       require "uri"
       uri = URI.parse(resp.header("location"))
       url = uri.path
