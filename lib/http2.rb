@@ -242,7 +242,11 @@ class Http2
   end
   
   def delete(args)
-    return self.get(args.merge(:method => :delete))
+    if args[:json]
+      return self.post(args.merge(:method => :delete))
+    else
+      return self.get(args.merge(:method => :delete))
+    end
   end
   
   #Tries to write a string to the socket. If it fails it reconnects and tries again.
@@ -348,7 +352,7 @@ class Http2
     return praw
   end
   
-  VALID_ARGUMENTS_POST = [:post, :url, :headers, :json]
+  VALID_ARGUMENTS_POST = [:post, :url, :headers, :json, :method]
   #Posts to a certain page.
   #===Examples
   # res = http.post("login.php", {"username" => "John Doe", "password" => 123)
@@ -359,6 +363,12 @@ class Http2
     
     args = self.parse_args(args)
     content_type = "application/x-www-form-urlencoded"
+    
+    if args.key?(:method) && args[:method]
+      method = args[:method].to_s.upcase
+    else
+      method = "POST"
+    end
     
     if args[:json]
       require "json" unless ::Kernel.const_defined?(:JSON)
@@ -375,7 +385,7 @@ class Http2
     @mutex.synchronize do
       puts "Doing post." if @debug
       
-      header_str = "POST /#{args[:url]} HTTP/1.1#{@nl}"
+      header_str = "#{method} /#{args[:url]} HTTP/1.1#{@nl}"
       header_str << self.header_str({"Content-Length" => praw.length, "Content-Type" => content_type}.merge(self.default_headers(args)), args)
       header_str << @nl
       header_str << praw
