@@ -218,7 +218,13 @@ class Http2
   def get(args)
     args = self.parse_args(args)
     
-    header_str = "GET /#{args[:url]} HTTP/1.1#{@nl}"
+    if args.key?(:method) && args[:method]
+      method = args[:method].to_s.upcase
+    else
+      method = "GET"
+    end
+    
+    header_str = "#{method} /#{args[:url]} HTTP/1.1#{@nl}"
     header_str << self.header_str(self.default_headers(args), args)
     header_str << @nl
     
@@ -233,6 +239,10 @@ class Http2
       print "Http2: Done with get request.\n" if @debug
       return resp
     end
+  end
+  
+  def delete(args)
+    return self.get(args.merge(:method => :delete))
   end
   
   #Tries to write a string to the socket. If it fails it reconnects and tries again.
