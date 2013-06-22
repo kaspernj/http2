@@ -280,11 +280,9 @@ class Http2
     }
     
     #Possible to give custom host-argument.
-    if args[:host]
-      headers["Host"] = args[:host]
-    else
-      headers["Host"] = @args[:host]
-    end
+    _args = args[:host] ? args : @args
+    headers["Host"] = _args[:host]
+    headers["Host"] << ":#{_args[:port]}" unless _args[:port] && [80,443].include?(_args[:port].to_i)
     
     if !@args.key?(:encoding_gzip) or @args[:encoding_gzip]
       headers["Accept-Encoding"] = "gzip"
