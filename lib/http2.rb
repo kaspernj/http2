@@ -26,7 +26,7 @@ class Http2
   
   attr_reader :cookies, :args
   
-  VALID_ARGUMENTS_INITIALIZE = [:host, :port, :ssl, :nl, :user_agent, :raise_errors, :follow_redirects, :debug, :encoding_gzip, :autostate, :basic_auth, :extra_headers]
+  VALID_ARGUMENTS_INITIALIZE = [:host, :port, :ssl, :nl, :user_agent, :raise_errors, :follow_redirects, :debug, :encoding_gzip, :autostate, :basic_auth, :extra_headers, :proxy]
   def initialize(args = {})
     args = {:host => args} if args.is_a?(String)
     raise "Arguments wasnt a hash." if !args.is_a?(Hash)
@@ -147,27 +147,26 @@ class Http2
     @charset = nil
     
     #Open connection.
-    if @args[:proxy]
+    if @args[:proxy] && @args[:ssl]
       print "Http2: Initializing proxy stuff.\n" if @debug
       @sock_plain = TCPSocket.new(@args[:proxy][:host], @args[:proxy][:port])
-      @sock = @sock_plain
       
-      @sock.write("CONNECT #{@args[:host]}:#{@args[:port]} HTTP/1.0#{@nl}")
-      @sock.write("User-Agent: #{@uagent}#{@nl}")
+      @sock_plain.write("CONNECT #{@args[:host]}:#{@args[:port]} HTTP/1.0#{@nl}")
+      @sock_plain.write("User-Agent: #{@uagent}#{@nl}")
       
       if @args[:proxy][:user] and @args[:proxy][:passwd]
         credential = ["#{@args[:proxy][:user]}:#{@args[:proxy][:passwd]}"].pack("m")
         credential.delete!("\r\n")
-        @sock.write("Proxy-Authorization: Basic #{credential}#{@nl}")
+        @sock_plain.write("Proxy-Authorization: Basic #{credential}#{@nl}")
       end
       
-      @sock.write(@nl)
+      @sock_plain.write(@nl)
       
-      res = @sock.gets
+      res = @sock_plain.gets
       raise res if res.to_s.downcase != "http/1.0 200 connection established#{@nl}"
-      
-      res_empty = @sock.gets
-      raise "Empty res wasnt empty." if res_empty != @nl
+    elsif @args[:proxy]
+      print "Http2: Opening socket connection to '#{@args[:host]}:#{@args[:port]}' through proxy '#{@args[:proxy][:host]}:#{@args[:proxy][:port]}'.\n" if @debug
+      @sock_plain = TCPSocket.new(@args[:proxy][:host], @args[:proxy][:port].to_i)
     else
       print "Http2: Opening socket connection to '#{@args[:host]}:#{@args[:port]}'.\n" if @debug
       @sock_plain = TCPSocket.new(@args[:host], @args[:port].to_i)
