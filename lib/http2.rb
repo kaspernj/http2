@@ -150,21 +150,19 @@ class Http2
     if @args[:proxy] && @args[:ssl]
       print "Http2: Initializing proxy stuff.\n" if @debug
       @sock_plain = TCPSocket.new(@args[:proxy][:host], @args[:proxy][:port])
-      @sock = @sock_plain
       
-      @sock.write("CONNECT #{@args[:host]}:#{@args[:port]} HTTP/1.0#{@nl}")
-      @sock.write("User-Agent: #{@uagent}#{@nl}")
+      @sock_plain.write("CONNECT #{@args[:host]}:#{@args[:port]} HTTP/1.0#{@nl}")
+      @sock_plain.write("User-Agent: #{@uagent}#{@nl}")
       
       if @args[:proxy][:user] and @args[:proxy][:passwd]
         credential = ["#{@args[:proxy][:user]}:#{@args[:proxy][:passwd]}"].pack("m")
         credential.delete!("\r\n")
-        @sock.write("Proxy-Authorization: Basic #{credential}#{@nl}")
+        @sock_plain.write("Proxy-Authorization: Basic #{credential}#{@nl}")
       end
       
-      @sock.write(@nl)
+      @sock_plain.write(@nl)
       
-      @sock_plain = @sock
-      res = @sock.gets
+      res = @sock_plain.gets
       raise res if res.to_s.downcase != "http/1.0 200 connection established#{@nl}"
     elsif @args[:proxy]
       print "Http2: Opening socket connection to '#{@args[:host]}:#{@args[:port]}' through proxy '#{@args[:proxy][:host]}:#{@args[:proxy][:port]}'.\n" if @debug
