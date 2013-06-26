@@ -383,7 +383,7 @@ class Http2
       puts "Doing post." if @debug
       
       header_str = "#{method} /#{args[:url]} HTTP/1.1#{@nl}"
-      header_str << self.header_str({"Content-Length" => praw.length, "Content-Type" => content_type}.merge(self.default_headers(args)), args)
+      header_str << self.header_str({"Content-Length" => praw.bytesize, "Content-Type" => content_type}.merge(self.default_headers(args)), args)
       header_str << @nl
       header_str << praw
       header_str << @nl
