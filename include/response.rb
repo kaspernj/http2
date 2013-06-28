@@ -8,6 +8,7 @@ class Http2::Response
     @args = args
     @args[:headers] = {} if !@args.key?(:headers)
     @args[:body] = "" if !@args.key?(:body)
+    @debug = @args[:debug]
   end
   
   #Returns headers given from the host for the result.
@@ -72,5 +73,29 @@ class Http2::Response
   def requested_url
     raise "URL could not be detected." if !@args[:request_args][:url]
     return @args[:request_args][:url]
+  end
+  
+  # Checks the data that has been sat on the object and raises various exceptions, if it does not validate somehow.
+  def validate!
+    puts "Http2: Validating response length." if @debug
+    validate_body_versus_content_length!
+  end
+  
+  private
+  
+  # Checks that the length of the body is the same as the given content-length if given.
+  def validate_body_versus_content_length!
+    unless self.header?("content-length")
+      puts "Http2: No content length given - skipping length validation." if @debug
+      return nil
+    end
+    
+    content_length = self.header("content-length").to_i
+    body_length = @args[:body].to_s.bytesize
+    
+    puts "Http2: Body length: #{body_length}" if @debug
+    puts "Http2: Content length: #{content_length}" if @debug
+    
+    raise "Body does not match the given content-length: '#{body_length}', '#{content_length}'." if body_length != content_length
   end
 end

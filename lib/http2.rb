@@ -388,7 +388,7 @@ class Http2
       header_str << praw
       header_str << @nl
       
-      puts "Header str: #{header_str}" if @debug
+      puts "Http2: Header str: #{header_str}" if @debug
       
       self.write(header_str)
       return self.read_response(args)
@@ -469,7 +469,7 @@ class Http2
       
       
       #Debug.
-      print "Headerstr: #{header_str}\n" if @debug
+      print "Http2: Headerstr: #{header_str}\n" if @debug
       
       
       #Write and return.
@@ -534,14 +534,15 @@ class Http2
   # res = http.read_response
   def read_response(args = {})
     @mode = "headers"
-    @resp = Http2::Response.new(:request_args => args)
-    
+    @transfer_encoding = nil
+    @resp = Http2::Response.new(:request_args => args, :debug => @debug)
     rec_count = 0
     
     loop do
       begin
         if @length and @length > 0 and @mode == "body"
           line = @sock.read(@length)
+          raise "Expected to get #{@length} of bytes but got #{line.bytesize}" if @length != line.bytesize
         else
           line = @sock.gets
         end
@@ -553,7 +554,7 @@ class Http2
           raise Errno::ECONNABORTED, "Server closed the connection before being able to read anything (KeepAliveMax: '#{@keepalive_max}', Connection: '#{@connection}', PID: '#{Process.pid}')."
         end
         
-        print "<#{@mode}>: '#{line}'\n" if @debug
+        puts "<#{@mode}>: '#{line}'" if @debug
       rescue Errno::ECONNRESET => e
         if rec_count > 0
           print "Http2: The connection was reset while reading - breaking gently...\n" if @debug
@@ -567,7 +568,8 @@ class Http2
       break if line.to_s == ""
       
       if @mode == "headers" and line == @nl
-        print "Http2: Changing mode to body!\n" if @debug
+        puts "Http2: Changing mode to body!" if @debug
+        raise "No headers was given at all? Possibly corrupt state after last request?" if @resp.headers.empty?
         break if @length == 0
         @mode = "body"
         self.on_content_call(args, @nl)
@@ -584,6 +586,12 @@ class Http2
     end
     
     
+    #Release variables.
+    resp = @resp
+    @resp = nil
+    @mode = nil
+    
+    
     #Check if we should reconnect based on keep-alive-max.
     if @keepalive_max == 1 or @connection == "close"
       @sock.close if !@sock.closed?
@@ -591,30 +599,31 @@ class Http2
     end
     
     
+    
+    # Validate that the response is as it should be.
+    puts "Http2: Validating response." if @debug
+    resp.validate!
+    
+    
     #Check if the content is gzip-encoded - if so: decode it!
     if @encoding == "gzip"
       require "zlib"
-      require "iconv"
       require "stringio"
-      io = StringIO.new(@resp.args[:body])
+      io = StringIO.new(resp.args[:body])
       gz = Zlib::GzipReader.new(io)
       untrusted_str = gz.read
       
       begin
-        valid_string = ic.encode("utf-8")
+        valid_string = ic.encode("UTF-8")
       rescue
-        ic = Iconv.new("UTF-8//IGNORE", "UTF-8")
-        valid_string = ic.iconv(untrusted_str + " ")[0..-2]
+        valid_string = untrusted_str.force_encoding("UTF-8").encode("UTF-8", :invalid => :replace, :replace => "").encode("UTF-8")
       end
       
-      @resp.args[:body] = valid_string
+      resp.args[:body] = valid_string
     end
     
     
-    #Release variables.
-    resp = @resp
-    @resp = nil
-    @mode = nil
+    
     
     raise "No status-code was received from the server. Headers: '#{resp.headers}' Body: '#{resp.args[:body]}'." if !resp.args[:code]
     
@@ -628,7 +637,7 @@ class Http2
       args[:ssl] = true if uri.scheme == "https"
       args[:port] = uri.port if uri.port
       
-      print "Redirecting from location-header to '#{url}'.\n" if @debug
+      puts "Http2: Redirecting from location-header to '#{url}'." if @debug
       
       if !args[:host] or args[:host] == @args[:host]
         return self.get(url)
@@ -688,13 +697,16 @@ class Http2
         
         @ctype = ctype
         @resp.args[:contenttype] = @ctype
+      elsif key == "transfer-encoding"
+        @transfer_encoding = match[2].to_s.downcase.strip
       end
       
       if key != "transfer-encoding" and key != "content-length" and key != "connection" and key != "keep-alive"
         self.on_content_call(args, line)
       end
       
-      @resp.headers[key] = [] if !@resp.headers.key?(key)
+      puts "Http2: Parsed header: #{match[1]}: #{match[2]}" if @debug
+      @resp.headers[key] = [] unless @resp.headers.key?(key)
       @resp.headers[key] << match[2]
     elsif match = line.match(/^HTTP\/([\d\.]+)\s+(\d+)\s+(.+)$/)
       @resp.args[:code] = match[2]
@@ -710,7 +722,7 @@ class Http2
     if @resp.args[:http_version] = "1.1"
       return "break" if @length == 0
       
-      if @resp.header("transfer-encoding").to_s.downcase == "chunked"
+      if @transfer_encoding == "chunked"
         len = line.strip.hex
         
         if len > 0
@@ -731,9 +743,10 @@ class Http2
         
         raise "Should have read newline but didnt: '#{nl}'." if nl != @nl
       else
+        puts "Http2: Adding #{line.to_s.bytesize} to the body." if @debug
         @resp.args[:body] << line.to_s
         self.on_content_call(args, line)
-        return "break" if @resp.header?("content-length") and @resp.args[:body].length >= @resp.header("content-length").to_i
+        return "break" if @resp.header?("content-length") && @resp.args[:body].length >= @resp.header("content-length").to_i
       end
     else
       raise "Dont know how to read HTTP version: '#{@resp.args[:http_version]}'."

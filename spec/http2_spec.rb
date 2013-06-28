@@ -26,7 +26,7 @@ describe "Http2" do
     require "json"
     
     #Test posting keep-alive and advanced post-data.
-    Http2.new(:host => "www.partyworm.dk") do |http|
+    Http2.new(:host => "www.partyworm.dk", :debug => false) do |http|
       0.upto(5) do
         resp = http.get("multipart_test.php")
         
