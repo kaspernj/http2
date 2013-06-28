@@ -240,6 +240,7 @@ class Http2
     end
   end
   
+  # Proxies the request to another method but forces the method to be "DELETE".
   def delete(args)
     if args[:json]
       return self.post(args.merge(:method => :delete))
@@ -349,13 +350,13 @@ class Http2
     return praw
   end
   
-  VALID_ARGUMENTS_POST = [:post, :url, :headers, :json, :method]
+  VALID_ARGUMENTS_POST = [:post, :url, :default_headers, :headers, :json, :method]
   #Posts to a certain page.
   #===Examples
   # res = http.post("login.php", {"username" => "John Doe", "password" => 123)
   def post(args)
     args.each do |key, val|
-      raise "Invalid key: '#{key}'." if !VALID_ARGUMENTS_POST.include?(key)
+      raise "Invalid key: '#{key}'." unless VALID_ARGUMENTS_POST.include?(key)
     end
     
     args = self.parse_args(args)
