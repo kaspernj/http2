@@ -110,4 +110,10 @@ describe "Http2" do
     isgd = Http2.isgdlink("https://github.com/kaspernj/http2")
     raise "Expected isgd-var to be valid but it wasnt: '#{isgd}'." if !isgd.match(/^http:\/\/is\.gd\/([A-z\d]+)$/)
   end
+  
+  it "should raise exception when something is not found" do
+    expect{
+      res = Http2.new(:host => "www.partyworm.dk").get("something_that_does_not_exist.php")
+    }.to raise_error
+  end
 end

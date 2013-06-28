@@ -653,6 +653,10 @@ class Http2
       err = Http2::Errors::Noaccess.new(resp.body)
       err.response = resp
       raise err
+    elsif @raise_errors && resp.args[:code].to_i == 404
+      err = Http2::Errors::Notfound.new(resp.body)
+      err.response = resp
+      raise err
     else
       autostate_register(resp) if @args[:autostate]
       

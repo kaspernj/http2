@@ -9,4 +9,9 @@ class Http2::Errors
   class Internalserver < RuntimeError
     attr_accessor :response
   end
+  
+  #Raised when a page is not found.
+  class Notfound < RuntimeError
+    attr_accessor :response
+  end
 end
