@@ -350,7 +350,7 @@ class Http2
     return praw
   end
   
-  VALID_ARGUMENTS_POST = [:post, :url, :default_headers, :headers, :json, :method, :cookies]
+  VALID_ARGUMENTS_POST = [:post, :url, :default_headers, :headers, :json, :method, :cookies, :on_content]
   #Posts to a certain page.
   #===Examples
   # res = http.post("login.php", {"username" => "John Doe", "password" => 123)
