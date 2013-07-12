@@ -1,17 +1,17 @@
 #This class holds various classes for error-handeling.
 class Http2::Errors
-  #Raised when trying to access something you dont have access to.
-  class Noaccess < RuntimeError
+  class Http2error
     attr_accessor :response
   end
+  
+  #Raised when trying to access something you dont have access to.
+  class Noaccess; end
   
   #Raised when an internal error occurs on the servers side.
-  class Internalserver < RuntimeError
-    attr_accessor :response
-  end
+  class Internalserver; end
   
   #Raised when a page is not found.
-  class Notfound < RuntimeError
-    attr_accessor :response
-  end
+  class Notfound < Http2error; end
+  
+  class Badrequest < Http2error; end
 end
