@@ -24,7 +24,7 @@ class Http2
     end
   end
   
-  attr_reader :cookies, :args
+  attr_reader :cookies, :args, :resp
   
   VALID_ARGUMENTS_INITIALIZE = [:host, :port, :ssl, :nl, :user_agent, :raise_errors, :follow_redirects, :debug, :encoding_gzip, :autostate, :basic_auth, :extra_headers, :proxy]
   def initialize(args = {})
@@ -63,7 +63,7 @@ class Http2
       @uagent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)"
     end
     
-    if !@args.key?(:raise_errors) or @args[:raise_errors]
+    if !@args.key?(:raise_errors) || @args[:raise_errors]
       @raise_errors = true
     else
       @raise_errors = false
@@ -646,11 +646,11 @@ class Http2
         http = Http2.new(args)
         return http.get(url)
       end
-    elsif @raise_errors and resp.args[:code].to_i == 500
+    elsif @raise_errors && resp.args[:code].to_i == 500
       err = Http2::Errors::Internalserver.new(resp.body)
       err.response = resp
       raise err
-    elsif @raise_errors and resp.args[:code].to_i == 403
+    elsif @raise_errors && resp.args[:code].to_i == 403
       err = Http2::Errors::Noaccess.new(resp.body)
       err.response = resp
       raise err
@@ -710,16 +710,18 @@ class Http2
         @transfer_encoding = match[2].to_s.downcase.strip
       end
       
-      if key != "transfer-encoding" and key != "content-length" and key != "connection" and key != "keep-alive"
-        self.on_content_call(args, line)
-      end
-      
       puts "Http2: Parsed header: #{match[1]}: #{match[2]}" if @debug
       @resp.headers[key] = [] unless @resp.headers.key?(key)
       @resp.headers[key] << match[2]
+      
+      if key != "transfer-encoding" and key != "content-length" and key != "connection" and key != "keep-alive"
+        self.on_content_call(args, line)
+      end
     elsif match = line.match(/^HTTP\/([\d\.]+)\s+(\d+)\s+(.+)$/)
       @resp.args[:code] = match[2]
       @resp.args[:http_version] = match[1]
+      
+      self.on_content_call(args, line)
     else
       raise "Could not understand header string: '#{line}'.\n\n#{@sock.read(409600)}"
     end

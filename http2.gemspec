@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "http2"
-  s.version = "0.0.21"
+  s.version = "0.0.22"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kasper Johansen"]
-  s.date = "2013-06-28"
+  s.date = "2013-06-30"
   s.description = "A lightweight framework for doing http-connections in Ruby. Supports cookies, keep-alive, compressing and much more."
   s.email = "k@spernj.org"
   s.extra_rdoc_files = [
