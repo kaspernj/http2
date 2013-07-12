@@ -286,8 +286,6 @@ class Http2
     
     if !@args.key?(:encoding_gzip) or @args[:encoding_gzip]
       headers["Accept-Encoding"] = "gzip"
-    else
-      #headers["Accept-Encoding"] = "none"
     end
     
     if @args[:basic_auth]
@@ -381,13 +379,12 @@ class Http2
     end
     
     @mutex.synchronize do
-      puts "Doing post." if @debug
+      puts "Http2: Doing post." if @debug
       
       header_str = "#{method} /#{args[:url]} HTTP/1.1#{@nl}"
       header_str << self.header_str({"Content-Length" => praw.bytesize, "Content-Type" => content_type}.merge(self.default_headers(args)), args)
       header_str << @nl
       header_str << praw
-      header_str << @nl
       
       puts "Http2: Header str: #{header_str}" if @debug
       
@@ -509,10 +506,15 @@ class Http2
         first = false if first
         
         if cookie_data.is_a?(Hash)
-          cstr << "#{Http2::Utils.urlenc(cookie_data["name"])}=#{Http2::Utils.urlenc(cookie_data["value"])}"
+          name = cookie_data["name"]
+          value = cookie_data["value"]
         else
-          cstr << "#{Http2::Utils.urlenc(cookie_name)}=#{Http2::Utils.urlenc(cookie_data)}"
+          name = cookie_name
+          value = cookie_data
         end
+        
+        raise "Unexpected lines: #{value.lines.to_a.length}." if value.lines.to_a.length != 1
+        cstr << "#{Http2::Utils.urlenc(name)}=#{Http2::Utils.urlenc(value)}"
       end
       
       headers_hash["Cookie"] = cstr
@@ -568,7 +570,7 @@ class Http2
       
       break if line.to_s == ""
       
-      if @mode == "headers" and line == @nl
+      if @mode == "headers" and (line == "\n" || line == "\r\n")
         puts "Http2: Changing mode to body!" if @debug
         raise "No headers was given at all? Possibly corrupt state after last request?" if @resp.headers.empty?
         break if @length == 0
@@ -738,14 +740,14 @@ class Http2
         
         if len > 0
           read = @sock.read(len)
-          return "break" if read == "" or read == @nl
+          return "break" if read == "" or (read == "\n" || read == "\r\n")
           @resp.args[:body] << read
           self.on_content_call(args, read)
         end
         
         nl = @sock.gets
         if len == 0
-          if nl == @nl
+          if nl == "\n" || nl == "\r\n"
             return "break"
           else
             raise "Dont know what to do :'-("

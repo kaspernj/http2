@@ -101,8 +101,8 @@ describe "Http2" do
     0.upto(105) do |count|
       url = urls[rand(urls.size)]
       #print "Doing request #{count} of 200 (#{url}).\n"
-      #res = http.get(url)
-      #raise "Body was empty." if res.body.to_s.length <= 0
+      res = http.get(url)
+      raise "Body was empty." if res.body.to_s.length <= 0
     end
   end
   
