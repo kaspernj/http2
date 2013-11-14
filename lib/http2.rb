@@ -370,7 +370,7 @@ class Http2
     
     if args[:json]
       require "json" unless ::Kernel.const_defined?(:JSON)
-      praw = JSON.generate(args[:json])
+      praw = args[:json].to_json
       content_type = "application/json"
     elsif args[:post].is_a?(String)
       praw = args[:post]
