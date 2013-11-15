@@ -348,7 +348,7 @@ class Http2
     return praw
   end
   
-  VALID_ARGUMENTS_POST = [:post, :url, :default_headers, :headers, :json, :method, :cookies, :on_content]
+  VALID_ARGUMENTS_POST = [:post, :url, :default_headers, :headers, :json, :method, :cookies, :on_content, :content_type]
   #Posts to a certain page.
   #===Examples
   # res = http.post("login.php", {"username" => "John Doe", "password" => 123)
@@ -358,7 +358,6 @@ class Http2
     end
     
     args = self.parse_args(args)
-    content_type = "application/x-www-form-urlencoded"
     
     if args.key?(:method) && args[:method]
       method = args[:method].to_s.upcase
@@ -377,6 +376,8 @@ class Http2
       autostate_set_on_post_hash(phash) if @args[:autostate]
       praw = Http2.post_convert_data(phash)
     end
+
+    content_type = args[:content_type] || content_type || "application/x-www-form-urlencoded"
     
     @mutex.synchronize do
       puts "Http2: Doing post." if @debug
