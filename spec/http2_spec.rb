@@ -97,12 +97,13 @@ describe "Http2" do
     ]
     urls = ["robots.txt"]
     
-    http = Http2.new(:host => "www.partyworm.dk", :debug => false)
-    0.upto(105) do |count|
-      url = urls[rand(urls.size)]
-      #print "Doing request #{count} of 200 (#{url}).\n"
-      res = http.get(url)
-      raise "Body was empty." if res.body.to_s.length <= 0
+    Http2.new(:host => "www.partyworm.dk", :debug => false) do |http|
+      0.upto(105) do |count|
+        url = urls[rand(urls.size)]
+        #print "Doing request #{count} of 200 (#{url}).\n"
+        res = http.get(url)
+        raise "Body was empty." if res.body.to_s.length <= 0
+      end
     end
   end
   
@@ -113,7 +114,38 @@ describe "Http2" do
   
   it "should raise exception when something is not found" do
     expect{
-      res = Http2.new(:host => "www.partyworm.dk").get("something_that_does_not_exist.php")
+      Http2.new(:host => "www.partyworm.dk") do |http|
+        http.get("something_that_does_not_exist.php")
+      end
     }.to raise_error
+  end
+  
+  it "should be able to post json" do
+    Http2.new(:host => "http2test.kaspernj.org") do |http|
+      res = http.post(
+        :url => "/jsontest.php",
+        :json => {:testkey => "testvalue"}
+      )
+      
+      data = JSON.parse(res.body)
+      data["_SERVER"]["CONTENT_TYPE"].should eql("application/json")
+      data["PHP_JSON_INPUT"]["testkey"].should eql("testvalue")
+    end
+  end
+  
+  it "should be able to post custom content types" do
+    require "json"
+    
+    Http2.new(:host => "http2test.kaspernj.org") do |http|
+      res = http.post(
+        :url => "/content_type_test.php",
+        :content_type => "plain/text",
+        :post => "test1_test2_test3"
+      )
+      
+      data = JSON.parse(res.body)
+      data["_SERVER"]["CONTENT_TYPE"].should eql("plain/text")
+      data["PHP_INPUT"].should eql("test1_test2_test3")
+    end
   end
 end
