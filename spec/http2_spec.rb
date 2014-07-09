@@ -117,7 +117,7 @@ describe "Http2" do
       Http2.new(:host => "www.partyworm.dk") do |http|
         http.get("something_that_does_not_exist.php")
       end
-    }.to raise_error
+    }.to raise_error(::Http2::Errors::Notfound)
   end
 
   it "should be able to post json" do

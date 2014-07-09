@@ -1,3 +1,7 @@
+require "uri"
+require "monitor" unless ::Kernel.const_defined?(:Monitor)
+require "string-cases"
+
 #This class tries to emulate a browser in Ruby without any visual stuff. Remember cookies, keep sessions alive, reset connections according to keep-alive rules and more.
 #===Examples
 # Http2.new(:host => "www.somedomain.com", :port => 80, :ssl => false, :debug => false) do |http|
@@ -12,7 +16,7 @@
 class Http2
   #Autoloader for subclasses.
   def self.const_missing(name)
-    require "#{File.dirname(__FILE__)}/../include/#{name.to_s.downcase}.rb"
+    require "#{File.dirname(__FILE__)}/../include/#{::StringCases.camel_to_snake(name)}.rb"
     return Http2.const_get(name)
   end
 
@@ -24,52 +28,14 @@ class Http2
     end
   end
 
-  attr_reader :cookies, :args, :resp
+  attr_reader :cookies, :args, :resp, :raise_errors, :nl
 
   VALID_ARGUMENTS_INITIALIZE = [:host, :port, :ssl, :nl, :user_agent, :raise_errors, :follow_redirects, :debug, :encoding_gzip, :autostate, :basic_auth, :extra_headers, :proxy]
   def initialize(args = {})
-    args = {:host => args} if args.is_a?(String)
-    raise "Arguments wasnt a hash." if !args.is_a?(Hash)
-
-    args.each do |key, val|
-      raise "Invalid key: '#{key}'." if !VALID_ARGUMENTS_INITIALIZE.include?(key)
-    end
-
-    @args = args
+    @args = parse_init_args(args)
+    set_default_values
     @cookies = {}
-    @debug = @args[:debug]
-    @autostate_values = {} if @args[:autostate]
-
-    require "monitor" unless ::Kernel.const_defined?(:Monitor)
     @mutex = Monitor.new
-
-    if !@args[:port]
-      if @args[:ssl]
-        @args[:port] = 443
-      else
-        @args[:port] = 80
-      end
-    end
-
-    if @args[:nl]
-      @nl = @args[:nl]
-    else
-      @nl = "\r\n"
-    end
-
-    if @args[:user_agent]
-      @uagent = @args[:user_agent]
-    else
-      @uagent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)"
-    end
-
-    if !@args.key?(:raise_errors) || @args[:raise_errors]
-      @raise_errors = true
-    else
-      @raise_errors = false
-    end
-
-    raise "No host was given." if !@args[:host]
     self.reconnect
 
     if block_given?
@@ -537,237 +503,15 @@ class Http2
   #===Examples
   # res = http.read_response
   def read_response(args = {})
-    @mode = "headers"
-    @transfer_encoding = nil
-    @resp = Http2::Response.new(:request_args => args, :debug => @debug)
-    rec_count = 0
-
-    loop do
-      begin
-        if @length and @length > 0 and @mode == "body"
-          line = @sock.read(@length)
-          raise "Expected to get #{@length} of bytes but got #{line.bytesize}" if @length != line.bytesize
-        else
-          line = @sock.gets
-        end
-
-        if line
-          rec_count += line.length
-        elsif !line and rec_count <= 0
-          @sock = nil
-          raise Errno::ECONNABORTED, "Server closed the connection before being able to read anything (KeepAliveMax: '#{@keepalive_max}', Connection: '#{@connection}', PID: '#{Process.pid}')."
-        end
-
-        puts "<#{@mode}>: '#{line}'" if @debug
-      rescue Errno::ECONNRESET => e
-        if rec_count > 0
-          print "Http2: The connection was reset while reading - breaking gently...\n" if @debug
-          @sock = nil
-          break
-        else
-          raise Errno::ECONNABORTED, "Server closed the connection before being able to read anything (KeepAliveMax: '#{@keepalive_max}', Connection: '#{@connection}', PID: '#{Process.pid}')."
-        end
-      end
-
-      break if line.to_s == ""
-
-      if @mode == "headers" and (line == "\n" || line == "\r\n")
-        puts "Http2: Changing mode to body!" if @debug
-        raise "No headers was given at all? Possibly corrupt state after last request?" if @resp.headers.empty?
-        break if @length == 0
-        @mode = "body"
-        self.on_content_call(args, @nl)
-        next
-      end
-
-      if @mode == "headers"
-        self.parse_header(line, args)
-      elsif @mode == "body"
-        stat = self.parse_body(line, args)
-        break if stat == "break"
-        next if stat == "next"
-      end
-    end
-
-
-    #Release variables.
-    resp = @resp
-    @resp = nil
-    @mode = nil
-
-
-    #Check if we should reconnect based on keep-alive-max.
-    if @keepalive_max == 1 or @connection == "close"
-      @sock.close if !@sock.closed?
-      @sock = nil
-    end
-
-
-
-    # Validate that the response is as it should be.
-    puts "Http2: Validating response." if @debug
-    resp.validate!
-
-
-    #Check if the content is gzip-encoded - if so: decode it!
-    if @encoding == "gzip"
-      require "zlib"
-      require "stringio"
-      io = StringIO.new(resp.args[:body])
-      gz = Zlib::GzipReader.new(io)
-      untrusted_str = gz.read
-
-      begin
-        valid_string = ic.encode("UTF-8")
-      rescue
-        valid_string = untrusted_str.force_encoding("UTF-8").encode("UTF-8", :invalid => :replace, :replace => "").encode("UTF-8")
-      end
-
-      resp.args[:body] = valid_string
-    end
-
-
-
-
-    raise "No status-code was received from the server. Headers: '#{resp.headers}' Body: '#{resp.args[:body]}'." if !resp.args[:code]
-
-    if (resp.args[:code].to_s == "302" || resp.args[:code].to_s == "307") and resp.header?("location") and (!@args.key?(:follow_redirects) or @args[:follow_redirects])
-      require "uri"
-      uri = URI.parse(resp.header("location"))
-      url = uri.path
-      url << "?#{uri.query}" if uri.query.to_s.length > 0
-
-      args = {:host => uri.host}
-      args[:ssl] = true if uri.scheme == "https"
-      args[:port] = uri.port if uri.port
-
-      puts "Http2: Redirecting from location-header to '#{url}'." if @debug
-
-      if !args[:host] or args[:host] == @args[:host]
-        return self.get(url)
-      else
-        http = Http2.new(args)
-        return http.get(url)
-      end
-    elsif @raise_errors && resp.args[:code].to_i == 500
-      err = Http2::Errors::Internalserver.new("A internal server error occurred")
-      err.response = resp
-      raise err
-    elsif @raise_errors && resp.args[:code].to_i == 403
-      err = Http2::Errors::Noaccess.new("No access")
-      err.response = resp
-      raise err
-    elsif @raise_errors && resp.args[:code].to_i == 400
-      err = Http2::Errors::Badrequest.new("Bad request")
-      err.response = resp
-      raise err
-    elsif @raise_errors && resp.args[:code].to_i == 404
-      err = Http2::Errors::Notfound.new("Not found")
-      err.response = resp
-      raise err
-    else
-      autostate_register(resp) if @args[:autostate]
-
-      return resp
-    end
+    Http2::ResponseReader.new(
+      http2: self,
+      sock: @sock,
+      args: args,
+      debug: @debug
+    ).response
   end
 
-  #Parse a header-line and saves it on the object.
-  #===Examples
-  # http.parse_header("Content-Type: text/html\r\n")
-  def parse_header(line, args = {})
-    if match = line.match(/^(.+?):\s*(.+)#{@nl}$/)
-      key = match[1].to_s.downcase
-
-      if key == "set-cookie"
-        Http2::Utils.parse_set_cookies(match[2]).each do |cookie_data|
-          @cookies[cookie_data["name"]] = cookie_data
-        end
-      elsif key == "keep-alive"
-        if ka_max = match[2].to_s.match(/max=(\d+)/)
-          @keepalive_max = ka_max[1].to_i
-          print "Http2: Keepalive-max set to: '#{@keepalive_max}'.\n" if @debug
-        end
-
-        if ka_timeout = match[2].to_s.match(/timeout=(\d+)/)
-          @keepalive_timeout = ka_timeout[1].to_i
-          print "Http2: Keepalive-timeout set to: '#{@keepalive_timeout}'.\n" if @debug
-        end
-      elsif key == "connection"
-        @connection = match[2].to_s.downcase
-      elsif key == "content-encoding"
-        @encoding = match[2].to_s.downcase
-      elsif key == "content-length"
-        @length = match[2].to_i
-      elsif key == "content-type"
-        ctype = match[2].to_s
-        if match_charset = ctype.match(/\s*;\s*charset=(.+)/i)
-          @charset = match_charset[1].downcase
-          @resp.args[:charset] = @charset
-          ctype.gsub!(match_charset[0], "")
-        end
-
-        @ctype = ctype
-        @resp.args[:contenttype] = @ctype
-      elsif key == "transfer-encoding"
-        @transfer_encoding = match[2].to_s.downcase.strip
-      end
-
-      puts "Http2: Parsed header: #{match[1]}: #{match[2]}" if @debug
-      @resp.headers[key] = [] unless @resp.headers.key?(key)
-      @resp.headers[key] << match[2]
-
-      if key != "transfer-encoding" and key != "content-length" and key != "connection" and key != "keep-alive"
-        self.on_content_call(args, line)
-      end
-    elsif match = line.match(/^HTTP\/([\d\.]+)\s+(\d+)\s+(.+)$/)
-      @resp.args[:code] = match[2]
-      @resp.args[:http_version] = match[1]
-
-      self.on_content_call(args, line)
-    else
-      raise "Could not understand header string: '#{line}'.\n\n#{@sock.read(409600)}"
-    end
-  end
-
-  #Parses the body based on given headers and saves it to the result-object.
-  # http.parse_body(str)
-  def parse_body(line, args)
-    if @resp.args[:http_version] = "1.1"
-      return "break" if @length == 0
-
-      if @transfer_encoding == "chunked"
-        len = line.strip.hex
-
-        if len > 0
-          read = @sock.read(len)
-          return "break" if read == "" or (read == "\n" || read == "\r\n")
-          @resp.args[:body] << read
-          self.on_content_call(args, read)
-        end
-
-        nl = @sock.gets
-        if len == 0
-          if nl == "\n" || nl == "\r\n"
-            return "break"
-          else
-            raise "Dont know what to do :'-("
-          end
-        end
-
-        raise "Should have read newline but didnt: '#{nl}'." if nl != @nl
-      else
-        puts "Http2: Adding #{line.to_s.bytesize} to the body." if @debug
-        @resp.args[:body] << line.to_s
-        self.on_content_call(args, line)
-        return "break" if @resp.header?("content-length") && @resp.args[:body].length >= @resp.header("content-length").to_i
-      end
-    else
-      raise "Dont know how to read HTTP version: '#{@resp.args[:http_version]}'."
-    end
-  end
-
-  private
+private
 
   #Registers the states from a result.
   def autostate_register(res)
@@ -789,5 +533,43 @@ class Http2
   #Sets the states on the given post-hash.
   def autostate_set_on_post_hash(phash)
     phash.merge!(@autostate_values)
+  end
+
+  def parse_init_args(args)
+    args = {:host => args} if args.is_a?(String)
+    raise "Arguments wasnt a hash." unless args.is_a?(Hash)
+
+    args.each do |key, val|
+      raise "Invalid key: '#{key}'." unless VALID_ARGUMENTS_INITIALIZE.include?(key)
+    end
+
+    raise "No host was given." unless args[:host]
+    return args
+  end
+
+  def set_default_values
+    @debug = @args[:debug]
+    @autostate_values = {} if @args[:autostate]
+    @nl = @args[:nl] || "\r\n"
+
+    if !@args[:port]
+      if @args[:ssl]
+        @args[:port] = 443
+      else
+        @args[:port] = 80
+      end
+    end
+
+    if @args[:user_agent]
+      @uagent = @args[:user_agent]
+    else
+      @uagent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)"
+    end
+
+    if !@args.key?(:raise_errors) || @args[:raise_errors]
+      @raise_errors = true
+    else
+      @raise_errors = false
+    end
   end
 end
