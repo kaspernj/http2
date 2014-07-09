@@ -1,5 +1,6 @@
 # http2
 
+[![Build Status](https://api.shippable.com/projects/53bd3eef2e23bdcb03c0df9e/badge/master)](https://www.shippable.com/projects/53bd3eef2e23bdcb03c0df9e)
 [![Code Climate](https://codeclimate.com/github/kaspernj/http2.png)](https://codeclimate.com/github/kaspernj/http2)
 
 Example of usage:
