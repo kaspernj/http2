@@ -5,16 +5,16 @@
 
 Gem::Specification.new do |s|
   s.name = "http2"
-  s.version = "0.0.23"
+  s.version = "0.0.24"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kasper Johansen"]
-  s.date = "2013-11-15"
+  s.date = "2014-07-09"
   s.description = "A lightweight framework for doing http-connections in Ruby. Supports cookies, keep-alive, compressing and much more."
   s.email = "k@spernj.org"
   s.extra_rdoc_files = [
     "LICENSE.txt",
-    "README.rdoc"
+    "README.md"
   ]
   s.files = [
     ".document",
@@ -22,38 +22,44 @@ Gem::Specification.new do |s|
     "Gemfile",
     "Gemfile.lock",
     "LICENSE.txt",
-    "README.rdoc",
+    "README.md",
     "Rakefile",
     "VERSION",
     "http2.gemspec",
     "include/errors.rb",
+    "include/post_multipart_helper.rb",
     "include/response.rb",
+    "include/response_reader.rb",
     "include/utils.rb",
     "lib/http2.rb",
+    "shippable.yml",
     "spec/http2_spec.rb",
     "spec/spec_helper.rb"
   ]
   s.homepage = "http://github.com/kaspernj/http2"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.23"
+  s.rubygems_version = "2.0.14"
   s.summary = "A lightweight framework for doing http-connections in Ruby. Supports cookies, keep-alive, compressing and much more."
 
   if s.respond_to? :specification_version then
-    s.specification_version = 3
+    s.specification_version = 4
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
+      s.add_runtime_dependency(%q<string-cases>, [">= 0"])
       s.add_development_dependency(%q<rspec>, ["~> 2.8.0"])
       s.add_development_dependency(%q<rdoc>, ["~> 3.12"])
       s.add_development_dependency(%q<bundler>, [">= 1.0.0"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.8.4"])
     else
+      s.add_dependency(%q<string-cases>, [">= 0"])
       s.add_dependency(%q<rspec>, ["~> 2.8.0"])
       s.add_dependency(%q<rdoc>, ["~> 3.12"])
       s.add_dependency(%q<bundler>, [">= 1.0.0"])
       s.add_dependency(%q<jeweler>, ["~> 1.8.4"])
     end
   else
+    s.add_dependency(%q<string-cases>, [">= 0"])
     s.add_dependency(%q<rspec>, ["~> 2.8.0"])
     s.add_dependency(%q<rdoc>, ["~> 3.12"])
     s.add_dependency(%q<bundler>, [">= 1.0.0"])
