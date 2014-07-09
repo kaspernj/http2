@@ -1,3 +1,4 @@
+require "socket"
 require "uri"
 require "monitor" unless ::Kernel.const_defined?(:Monitor)
 require "string-cases"
@@ -102,54 +103,20 @@ class Http2
 
   #Reconnects to the host.
   def reconnect
-    require "socket"
     puts "Http2: Reconnect." if @debug
-
-    #Reset variables.
-    @keepalive_max = nil
-    @keepalive_timeout = nil
-    @connection = nil
-    @contenttype = nil
-    @charset = nil
 
     #Open connection.
     if @args[:proxy] && @args[:ssl]
-      print "Http2: Initializing proxy stuff.\n" if @debug
-      @sock_plain = TCPSocket.new(@args[:proxy][:host], @args[:proxy][:port])
-
-      @sock_plain.write("CONNECT #{@args[:host]}:#{@args[:port]} HTTP/1.0#{@nl}")
-      @sock_plain.write("User-Agent: #{@uagent}#{@nl}")
-
-      if @args[:proxy][:user] and @args[:proxy][:passwd]
-        credential = ["#{@args[:proxy][:user]}:#{@args[:proxy][:passwd]}"].pack("m")
-        credential.delete!("\r\n")
-        @sock_plain.write("Proxy-Authorization: Basic #{credential}#{@nl}")
-      end
-
-      @sock_plain.write(@nl)
-
-      res = @sock_plain.gets
-      raise res if res.to_s.downcase != "http/1.0 200 connection established#{@nl}"
+      connect_proxy_ssl
     elsif @args[:proxy]
-      print "Http2: Opening socket connection to '#{@args[:host]}:#{@args[:port]}' through proxy '#{@args[:proxy][:host]}:#{@args[:proxy][:port]}'.\n" if @debug
-      @sock_plain = TCPSocket.new(@args[:proxy][:host], @args[:proxy][:port].to_i)
+      connect_proxy
     else
       print "Http2: Opening socket connection to '#{@args[:host]}:#{@args[:port]}'.\n" if @debug
       @sock_plain = TCPSocket.new(@args[:host], @args[:port].to_i)
     end
 
     if @args[:ssl]
-      print "Http2: Initializing SSL.\n" if @debug
-      require "openssl" unless ::Kernel.const_defined?(:OpenSSL)
-
-      ssl_context = OpenSSL::SSL::SSLContext.new
-      #ssl_context.verify_mode = OpenSSL::SSL::VERIFY_PEER
-
-      @sock_ssl = OpenSSL::SSL::SSLSocket.new(@sock_plain, ssl_context)
-      @sock_ssl.sync_close = true
-      @sock_ssl.connect
-
-      @sock = @sock_ssl
+      apply_ssl
     else
       @sock = @sock_plain
     end
@@ -369,84 +336,30 @@ class Http2
     phash = args[:post].clone
     autostate_set_on_post_hash(phash) if @args[:autostate]
 
-    #Generate random string.
-    boundary = rand(36**50).to_s(36)
+    post_multipart_helper = ::Http2::PostMultipartHelper.new(self)
 
     #Use tempfile to store contents to avoid eating memory if posting something really big.
-    require "tempfile"
-
-    Tempfile.open("http2_post_multipart_tmp_#{boundary}") do |praw|
-      phash.each do |key, val|
-        praw << "--#{boundary}#{@nl}"
-
-        if val.class.name.to_s == "Tempfile" and val.respond_to?(:original_filename)
-          praw << "Content-Disposition: form-data; name=\"#{key}\"; filename=\"#{val.original_filename}\";#{@nl}"
-          praw << "Content-Length: #{val.to_s.bytesize}#{@nl}"
-        elsif val.is_a?(Hash) and val[:filename]
-          praw << "Content-Disposition: form-data; name=\"#{key}\"; filename=\"#{val[:filename]}\";#{@nl}"
-
-          if val[:content]
-            praw << "Content-Length: #{val[:content].to_s.bytesize}#{@nl}"
-          elsif val[:fpath]
-            praw << "Content-Length: #{File.size(val[:fpath])}#{@nl}"
-          else
-            raise "Could not figure out where to get content from."
-          end
-        else
-          praw << "Content-Disposition: form-data; name=\"#{key}\";#{@nl}"
-          praw << "Content-Length: #{val.to_s.bytesize}#{@nl}"
-        end
-
-        praw << "Content-Type: text/plain#{@nl}"
-        praw << @nl
-
-        if val.class.name.to_s == "StringIO"
-          praw << val.read
-        elsif val.is_a?(Hash) and val[:content]
-          praw << val[:content].to_s
-        elsif val.is_a?(Hash) and val[:fpath]
-          File.open(val[:fpath], "r") do |fp|
-            begin
-              while data = fp.sysread(4096)
-                praw << data
-              end
-            rescue EOFError
-              #ignore.
-            end
-          end
-        else
-          praw << val.to_s
-        end
-
-        praw << @nl
-      end
-
-      praw << "--#{boundary}--"
-
-
+    post_multipart_helper.generate_raw(phash) do |helper, praw|
       #Generate header-string containing 'praw'-variable.
       header_str = "POST /#{args[:url]} HTTP/1.1#{@nl}"
-      header_str << self.header_str(self.default_headers(args).merge(
-        "Content-Type" => "multipart/form-data; boundary=#{boundary}",
+      header_str << header_str(default_headers(args).merge(
+        "Content-Type" => "multipart/form-data; boundary=#{helper.boundary}",
         "Content-Length" => praw.size
       ), args)
       header_str << @nl
 
-
-      #Debug.
       print "Http2: Headerstr: #{header_str}\n" if @debug
-
 
       #Write and return.
       @mutex.synchronize do
-        self.write(header_str)
+        write(header_str)
 
         praw.rewind
         praw.each_line do |data|
-          self.sock_write(data)
+          sock_write(data)
         end
 
-        return self.read_response(args)
+        return read_response(args)
       end
     end
   end
@@ -571,5 +484,43 @@ private
     else
       @raise_errors = false
     end
+  end
+
+  def connect_proxy_ssl
+    print "Http2: Initializing proxy stuff.\n" if @debug
+    @sock_plain = TCPSocket.new(@args[:proxy][:host], @args[:proxy][:port])
+
+    @sock_plain.write("CONNECT #{@args[:host]}:#{@args[:port]} HTTP/1.0#{@nl}")
+    @sock_plain.write("User-Agent: #{@uagent}#{@nl}")
+
+    if @args[:proxy][:user] and @args[:proxy][:passwd]
+      credential = ["#{@args[:proxy][:user]}:#{@args[:proxy][:passwd]}"].pack("m")
+      credential.delete!("\r\n")
+      @sock_plain.write("Proxy-Authorization: Basic #{credential}#{@nl}")
+    end
+
+    @sock_plain.write(@nl)
+
+    res = @sock_plain.gets
+    raise res if res.to_s.downcase != "http/1.0 200 connection established#{@nl}"
+  end
+
+  def connect_proxy
+    puts "Http2: Opening socket connection to '#{@args[:host]}:#{@args[:port]}' through proxy '#{@args[:proxy][:host]}:#{@args[:proxy][:port]}'." if @debug
+    @sock_plain = TCPSocket.new(@args[:proxy][:host], @args[:proxy][:port].to_i)
+  end
+
+  def apply_ssl
+    puts "Http2: Initializing SSL." if @debug
+    require "openssl" unless ::Kernel.const_defined?(:OpenSSL)
+
+    ssl_context = OpenSSL::SSL::SSLContext.new
+    #ssl_context.verify_mode = OpenSSL::SSL::VERIFY_PEER
+
+    @sock_ssl = OpenSSL::SSL::SSLSocket.new(@sock_plain, ssl_context)
+    @sock_ssl.sync_close = true
+    @sock_ssl.connect
+
+    @sock = @sock_ssl
   end
 end
