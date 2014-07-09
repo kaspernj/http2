@@ -3,3 +3,5 @@ rvm:
   - 2.0.0
 script:
   - CODECLIMATE_REPO_TOKEN=df980a87f4dbf846f13115f0ff1a8179bf165b645dcf12204a96c91d9e665f8e bundle exec rspec
+notifications:
+   email: false
