@@ -17,20 +17,15 @@ class Http2::PostDataGenerator
     return praw
   end
 
+private
+
   def generate_for_hash(hash)
     praw = ""
 
     @pdata.each do |key, val|
       praw << "&" if praw != ""
-
       key = "#{@args[:orig_key]}[#{key}]" if @args[:orig_key]
-
-      if val.is_a?(Hash) || val.is_a?(Array)
-        praw << ::Http2::PostDataGenerator.new(val, :orig_key => key).generate
-      else
-        data = ::Http2::PostDataGenerator.new(val).generate
-        praw << "#{Http2::Utils.urlenc(key)}=#{Http2::Utils.urlenc(data)}"
-      end
+      praw << generate_key_value(key, val)
     end
 
     praw
@@ -49,16 +44,19 @@ class Http2::PostDataGenerator
         key = count
       end
 
-      if val.is_a?(Hash) || val.is_a?(Array)
-        praw << ::Http2::PostDataGenerator.new(val, :orig_key => key).generate
-      else
-        data = ::Http2::PostDataGenerator.new(val).generate
-        praw << "#{Http2::Utils.urlenc(key)}=#{Http2::Utils.urlenc(data)}"
-      end
-
+      praw << generate_key_value(key, val)
       count += 1
     end
 
     praw
+  end
+
+  def generate_key_value(key, value)
+    if value.is_a?(Hash) || value.is_a?(Array)
+      return ::Http2::PostDataGenerator.new(value, :orig_key => key).generate
+    else
+      data = ::Http2::PostDataGenerator.new(value).generate
+      return "#{Http2::Utils.urlenc(key)}=#{Http2::Utils.urlenc(data)}"
+    end
   end
 end
