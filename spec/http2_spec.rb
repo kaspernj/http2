@@ -117,14 +117,22 @@ describe "Http2" do
 
     Http2.new(:host => "http2test.kaspernj.org") do |http|
       res = http.post(
-        :url => "/content_type_test.php",
-        :content_type => "plain/text",
-        :post => "test1_test2_test3"
+        url: "content_type_test.php",
+        content_type: "plain/text",
+        post: "test1_test2_test3"
       )
 
       data = JSON.parse(res.body)
       data["_SERVER"]["CONTENT_TYPE"].should eql("plain/text")
       data["PHP_INPUT"].should eql("test1_test2_test3")
+    end
+  end
+
+  it "should set various timeouts" do
+    Http2.new(:host => "http2test.kaspernj.org") do |http|
+      res = http.get("content_type_test.php")
+      http.keepalive_timeout.should eq 5
+      http.keepalive_max.should eq 100
     end
   end
 

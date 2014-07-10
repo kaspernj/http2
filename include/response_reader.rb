@@ -152,14 +152,14 @@ private
   end
 
   def parse_keep_alive(keep_alive_line)
-    if ka_max = keep_alive_line.match(/max=(\d+)/)
-      @http2.keepalive_max = ka_max[1].to_i
-      puts "Http2: Keepalive-max set to: '#{@keepalive_max}'." if @debug
-    end
-
-    if ka_timeout = keep_alive_line.match(/timeout=(\d+)/)
-      @http2.keepalive_timeout = ka_timeout[1].to_i
-      puts "Http2: Keepalive-timeout set to: '#{@keepalive_timeout}'." if @debug
+    keep_alive_line.scan(/([a-z]+)=(\d+)/) do |match|
+      if match[0] == "timeout"
+        puts "Http2: Keepalive-max set to: '#{@keepalive_max}'." if @debug
+        @http2.keepalive_timeout = match[1].to_i
+      elsif match[0] == "max"
+        puts "Http2: Keepalive-timeout set to: '#{@keepalive_timeout}'." if @debug
+        @http2.keepalive_max = match[1].to_i
+      end
     end
   end
 
