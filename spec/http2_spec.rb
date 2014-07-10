@@ -1,27 +1,6 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
 describe "Http2" do
-  it "should be able to recursively parse post-data-hashes." do
-    res = Http2.post_convert_data(
-      "test1" => "test2"
-    )
-    raise "Expected 'test1=test2' but got: '#{res}'." if res != "test1=test2"
-
-    res = Http2.post_convert_data(
-      "test1" => [1, 2, 3]
-    )
-    raise "Expected 'test1%5B0%5D=1&test1%5B1%5D=2&test1%5B2%5D=3' but got: '#{res}'." if res != "test1%5B0%5D=1&test1%5B1%5D=2&test1%5B2%5D=3"
-
-    res = Http2.post_convert_data(
-      "test1" => {
-        "order" => {
-          [:Bnet_profile, "profile_id"] => 5
-        }
-      }
-    )
-    raise "Expected 'test1%5Border%5D%5B%5B%3ABnet_profile%2C+%22profile_id%22%5D%5D=5' but got: '#{res}'." if res != "test1%5Border%5D%5B%5B%3ABnet_profile%2C+%22profile_id%22%5D%5D=5"
-  end
-
   it "should be able to do normal post-requests." do
     require "json"
 

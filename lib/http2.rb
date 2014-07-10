@@ -29,7 +29,7 @@ class Http2
     end
   end
 
-  attr_reader :cookies, :args, :resp, :raise_errors, :nl
+  attr_reader :cookies, :args, :debug, :mutex, :resp, :raise_errors, :nl
 
   VALID_ARGUMENTS_INITIALIZE = [:host, :port, :ssl, :nl, :user_agent, :raise_errors, :follow_redirects, :debug, :encoding_gzip, :autostate, :basic_auth, :extra_headers, :proxy]
   def initialize(args = {})
@@ -237,94 +237,11 @@ class Http2
     return headers
   end
 
-  #This is used to convert a hash to valid post-data recursivly.
-  def self.post_convert_data(pdata, args = nil)
-    praw = ""
-
-    if pdata.is_a?(Hash)
-      pdata.each do |key, val|
-        praw << "&" if praw != ""
-
-        if args and args[:orig_key]
-          key = "#{args[:orig_key]}[#{key}]"
-        end
-
-        if val.is_a?(Hash) or val.is_a?(Array)
-          praw << self.post_convert_data(val, {:orig_key => key})
-        else
-          praw << "#{Http2::Utils.urlenc(key)}=#{Http2::Utils.urlenc(Http2.post_convert_data(val))}"
-        end
-      end
-    elsif pdata.is_a?(Array)
-      count = 0
-      pdata.each do |val|
-        praw << "&" if praw != ""
-
-        if args and args[:orig_key]
-          key = "#{args[:orig_key]}[#{count}]"
-        else
-          key = count
-        end
-
-        if val.is_a?(Hash) or val.is_a?(Array)
-          praw << self.post_convert_data(val, {:orig_key => key})
-        else
-          praw << "#{Http2::Utils.urlenc(key)}=#{Http2::Utils.urlenc(Http2.post_convert_data(val))}"
-        end
-
-        count += 1
-      end
-    else
-      return pdata.to_s
-    end
-
-    return praw
-  end
-
-  VALID_ARGUMENTS_POST = [:post, :url, :default_headers, :headers, :json, :method, :cookies, :on_content, :content_type]
   #Posts to a certain page.
   #===Examples
   # res = http.post("login.php", {"username" => "John Doe", "password" => 123)
   def post(args)
-    args.each do |key, val|
-      raise "Invalid key: '#{key}'." unless VALID_ARGUMENTS_POST.include?(key)
-    end
-
-    args = self.parse_args(args)
-
-    if args.key?(:method) && args[:method]
-      method = args[:method].to_s.upcase
-    else
-      method = "POST"
-    end
-
-    if args[:json]
-      require "json" unless ::Kernel.const_defined?(:JSON)
-      praw = args[:json].to_json
-      content_type = "application/json"
-    elsif args[:post].is_a?(String)
-      praw = args[:post]
-    else
-      phash = args[:post] ? args[:post].clone : {}
-      autostate_set_on_post_hash(phash) if @args[:autostate]
-      praw = Http2.post_convert_data(phash)
-    end
-
-    content_type = args[:content_type] || content_type || "application/x-www-form-urlencoded"
-
-    @mutex.synchronize do
-      puts "Http2: Doing post." if @debug
-
-      header_str = "#{method} /#{args[:url]} HTTP/1.1#{@nl}"
-      header_str << self.header_str({"Content-Length" => praw.bytesize, "Content-Type" => content_type}.merge(self.default_headers(args)), args)
-      header_str << @nl
-      header_str << praw
-
-      puts "Http2: Header str: #{header_str}" if @debug
-
-      self.write(header_str)
-      return self.read_response(args)
-    end
+    ::Http2::PostRequest.new(self, args).execute
   end
 
   #Posts to a certain page using the multipart-method.
@@ -377,7 +294,7 @@ class Http2
 
   #Returns a header-string which normally would be used for a request in the given state.
   def header_str(headers_hash, args = {})
-    if @cookies.length > 0 and (!args.key?(:cookies) or args[:cookies])
+    if @cookies.length > 0 && (!args.key?(:cookies) || args[:cookies])
       cstr = ""
 
       first = true
@@ -416,7 +333,7 @@ class Http2
   #===Examples
   # res = http.read_response
   def read_response(args = {})
-    Http2::ResponseReader.new(
+    ::Http2::ResponseReader.new(
       http2: self,
       sock: @sock,
       args: args,
