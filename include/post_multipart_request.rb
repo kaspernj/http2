@@ -1,13 +1,41 @@
 require "tempfile"
 
-class Http2::PostMultipartHelper
-  attr_reader :boundary
-
-  def initialize(http2)
-    @nl = http2.nl
-
-    #Generate random string.
+class Http2::PostMultipartRequest
+  def initialize(http2, *args)
+    @http2, @nl, @args = http2, http2.nl, http2.parse_args(*args)
+    @phash = @args[:post].clone
+    @http2.autostate_set_on_post_hash(phash) if @http2.autostate
     @boundary = rand(36**50).to_s(36)
+  end
+
+  def execute
+    generate_raw(@phash) do |helper, praw|
+      puts "Http2: Header string: #{header_string}" if @debug
+
+      @http2.mutex.synchronize do
+        @http2.write(header_string(praw))
+
+        praw.rewind
+        praw.each_line do |data|
+          @http2.sock_write(data)
+        end
+
+        return @http2.read_response(@args)
+      end
+    end
+  end
+
+private
+
+  def header_string(praw)
+    header_str = "POST /#{@args[:url]} HTTP/1.1#{@nl}"
+    header_str << @http2.header_str(@http2.default_headers(@args).merge(
+      "Content-Type" => "multipart/form-data; boundary=#{@boundary}",
+      "Content-Length" => praw.size
+    ), @args)
+    header_str << @nl
+
+    return header_str
   end
 
   def generate_raw(phash)

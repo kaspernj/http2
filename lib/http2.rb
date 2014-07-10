@@ -29,7 +29,7 @@ class Http2
     end
   end
 
-  attr_reader :cookies, :args, :debug, :mutex, :resp, :raise_errors, :nl
+  attr_reader :autostate, :cookies, :args, :debug, :mutex, :resp, :raise_errors, :nl
   attr_accessor :keepalive_max, :keepalive_timeout
 
   VALID_ARGUMENTS_INITIALIZE = [:host, :port, :ssl, :nl, :user_agent, :raise_errors, :follow_redirects, :debug, :encoding_gzip, :autostate, :basic_auth, :extra_headers, :proxy]
@@ -125,20 +125,18 @@ class Http2
 
   #Forces various stuff into arguments-hash like URL from original arguments and enables single-string-shortcuts and more.
   def parse_args(*args)
-    if args.length == 1 and args.first.is_a?(String)
+    if args.length == 1 && args.first.is_a?(String)
       args = {:url => args.first}
     elsif args.length >= 2
       raise "Couldnt parse arguments."
-    elsif args.is_a?(Array) and args.length == 1
+    elsif args.is_a?(Array) && args.length == 1
       args = args.first
     else
       raise "Invalid arguments: '#{args.class.name}'."
     end
 
-    if !args.key?(:url) or !args[:url]
-      raise "No URL given: '#{args[:url]}'."
-    elsif args[:url].to_s.split("\n").length > 1
-      raise "Multiple lines given in URL: '#{args[:url]}'."
+    if args[:url].to_s.split("\n").length != 1
+      raise "Invalid URL: '#{args[:url]}'."
     end
 
     return args
@@ -149,29 +147,7 @@ class Http2
   # res = http.get("somepage.html")
   # print res.body #=> <String>-object containing the HTML gotten.
   def get(args)
-    args = self.parse_args(args)
-
-    if args.key?(:method) && args[:method]
-      method = args[:method].to_s.upcase
-    else
-      method = "GET"
-    end
-
-    header_str = "#{method} /#{args[:url]} HTTP/1.1#{@nl}"
-    header_str << self.header_str(self.default_headers(args), args)
-    header_str << @nl
-
-    @mutex.synchronize do
-      print "Http2: Writing headers.\n" if @debug
-      print "Header str: #{header_str}\n" if @debug
-      self.write(header_str)
-
-      print "Http2: Reading response.\n" if @debug
-      resp = self.read_response(args)
-
-      print "Http2: Done with get request.\n" if @debug
-      return resp
-    end
+    ::Http2::GetRequest.new(self, args).execute
   end
 
   # Proxies the request to another method but forces the method to be "DELETE".
@@ -191,7 +167,7 @@ class Http2
     self.reconnect if !self.socket_working?
 
     begin
-      raise Errno::EPIPE, "The socket is closed." if !@sock or @sock.closed?
+      raise Errno::EPIPE, "The socket is closed." if !@sock || @sock.closed?
       self.sock_write(str)
     rescue Errno::EPIPE #this can also be thrown by puts.
       self.reconnect
@@ -214,27 +190,20 @@ class Http2
     }
 
     #Possible to give custom host-argument.
-    _args = args[:host] ? args : @args
-    headers["Host"] = _args[:host]
-    headers["Host"] += ":#{_args[:port]}" unless _args[:port] && [80,443].include?(_args[:port].to_i)
+    host = args[:host] || @args[:host]
+    port = args[:port] || @args[:port]
 
-    if !@args.key?(:encoding_gzip) or @args[:encoding_gzip]
-      headers["Accept-Encoding"] = "gzip"
-    end
+    headers["Host"] = host
+    headers["Host"] << ":#{port}" unless port && [80, 443].include?(port.to_i)
+    headers["Accept-Encoding"] = "gzip" if @args[:encoding_gzip]
 
     if @args[:basic_auth]
       require "base64" unless ::Kernel.const_defined?(:Base64)
       headers["Authorization"] = "Basic #{Base64.encode64("#{@args[:basic_auth][:user]}:#{@args[:basic_auth][:passwd]}").strip}"
     end
 
-    if @args[:extra_headers]
-      headers.merge!(@args[:extra_headers])
-    end
-
-    if args[:headers]
-      headers.merge!(args[:headers])
-    end
-
+    headers.merge!(@args[:extra_headers]) if @args[:extra_headers]
+    headers.merge!(args[:headers]) if args[:headers]
     return headers
   end
 
@@ -249,37 +218,7 @@ class Http2
   #===Examples
   # res = http.post_multipart("upload.php", {"normal_value" => 123, "file" => Tempfile.new(?)})
   def post_multipart(*args)
-    args = self.parse_args(*args)
-
-    phash = args[:post].clone
-    autostate_set_on_post_hash(phash) if @args[:autostate]
-
-    post_multipart_helper = ::Http2::PostMultipartHelper.new(self)
-
-    #Use tempfile to store contents to avoid eating memory if posting something really big.
-    post_multipart_helper.generate_raw(phash) do |helper, praw|
-      #Generate header-string containing 'praw'-variable.
-      header_str = "POST /#{args[:url]} HTTP/1.1#{@nl}"
-      header_str << header_str(default_headers(args).merge(
-        "Content-Type" => "multipart/form-data; boundary=#{helper.boundary}",
-        "Content-Length" => praw.size
-      ), args)
-      header_str << @nl
-
-      print "Http2: Headerstr: #{header_str}\n" if @debug
-
-      #Write and return.
-      @mutex.synchronize do
-        write(header_str)
-
-        praw.rewind
-        praw.each_line do |data|
-          sock_write(data)
-        end
-
-        return read_response(args)
-      end
-    end
+    ::Http2::PostMultipartRequest.new(self, *args).execute
   end
 
   def sock_write(str)
@@ -295,28 +234,7 @@ class Http2
 
   #Returns a header-string which normally would be used for a request in the given state.
   def header_str(headers_hash, args = {})
-    if @cookies.length > 0 && (!args.key?(:cookies) || args[:cookies])
-      cstr = ""
-
-      first = true
-      @cookies.each do |cookie_name, cookie_data|
-        cstr << "; " if !first
-        first = false if first
-
-        if cookie_data.is_a?(Hash)
-          name = cookie_data["name"]
-          value = cookie_data["value"]
-        else
-          name = cookie_name
-          value = cookie_data
-        end
-
-        raise "Unexpected lines: #{value.lines.to_a.length}." if value.lines.to_a.length != 1
-        cstr << "#{Http2::Utils.urlenc(name)}=#{Http2::Utils.urlenc(value)}"
-      end
-
-      headers_hash["Cookie"] = cstr
-    end
+    headers_hash["Cookie"] = cookie_header_string
 
     headers_str = ""
     headers_hash.each do |key, val|
@@ -324,6 +242,29 @@ class Http2
     end
 
     return headers_str
+  end
+
+  def cookie_header_string
+    cstr = ""
+
+    first = true
+    @cookies.each do |cookie_name, cookie_data|
+      cstr << "; " unless first
+      first = false if first
+
+      if cookie_data.is_a?(Hash)
+        name = cookie_data["name"]
+        value = cookie_data["value"]
+      else
+        name = cookie_name
+        value = cookie_data
+      end
+
+      raise "Unexpected lines: #{value.lines.to_a.length}." if value.lines.to_a.length != 1
+      cstr << "#{Http2::Utils.urlenc(name)}=#{Http2::Utils.urlenc(value)}"
+    end
+
+    return cstr
   end
 
   def on_content_call(args, str)
@@ -337,8 +278,7 @@ class Http2
     ::Http2::ResponseReader.new(
       http2: self,
       sock: @sock,
-      args: args,
-      debug: @debug
+      args: args
     ).response
   end
 
@@ -380,7 +320,7 @@ private
 
   def set_default_values
     @debug = @args[:debug]
-    @autostate_values = {} if @args[:autostate]
+    @autostate_values = {} if autostate
     @nl = @args[:nl] || "\r\n"
 
     if !@args[:port]

@@ -6,7 +6,7 @@ class Http2::ResponseReader
     @transfer_encoding = nil
     @response = Http2::Response.new(:request_args => args, :debug => @debug)
     @rec_count = 0
-    @args, @debug, @http2, @sock = args[:args], args[:debug], args[:http2], args[:sock]
+    @args, @debug, @http2, @sock = args[:args], args[:http2].debug, args[:http2], args[:sock]
     @nl = @http2.nl
 
     read_headers
