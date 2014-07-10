@@ -8,21 +8,21 @@ class Http2::ResponseReader
     @rec_count = 0
     @args, @debug, @http2, @sock = args[:args], args[:http2].debug, args[:http2], args[:sock]
     @nl = @http2.nl
+    @conn = @http2.connection
 
     read_headers
-    read_body
+    read_body if @length == nil || @length > 0
     finish
   end
 
   def read_headers
     loop do
-      line = @sock.gets
+      line = @conn.gets
       check_line_read(line)
 
       if line == "\n" || line == "\r\n" || line == @nl
         puts "Http2: Changing mode to body!" if @debug
         raise "No headers was given at all? Possibly corrupt state after last request?" if @response.headers.empty?
-        break if @length == 0
         @mode = "body"
         @http2.on_content_call(@args, @nl)
         break
@@ -34,11 +34,11 @@ class Http2::ResponseReader
 
   def read_body
     loop do
-      if @length && @length > 0
-        line = @sock.read(@length)
+      if @length
+        line = @conn.read(@length)
         raise "Expected to get #{@length} of bytes but got #{line.bytesize}" if @length != line.bytesize
       else
-        line = @sock.gets
+        line = @conn.gets
       end
 
       check_line_read(line)
@@ -51,7 +51,7 @@ class Http2::ResponseReader
   def finish
     #Check if we should reconnect based on keep-alive-max.
     if @keepalive_max == 1 || @connection == "close"
-      @sock.close unless @sock.closed?
+      @conn.close unless @conn.closed?
     end
 
     # Validate that the response is as it should be.
@@ -80,7 +80,7 @@ private
       if !args[:host] || args[:host] == @args[:host]
         return @http2.get(url)
       else
-        Http2.new(args).get(url)
+        ::Http2.new(args).get(url)
       end
     end
   end
@@ -140,8 +140,7 @@ private
     if line
       @rec_count += line.length
     elsif !line && @rec_count <= 0
-      @sock = nil
-      raise Errno::ECONNABORTED, "Server closed the connection before being able to read anything (KeepAliveMax: '#{@keepalive_max}', Connection: '#{@connection}', PID: '#{Process.pid}')."
+      raise Errno::ECONNABORTED, "Server closed the connection before being able to read anything (KeepAliveMax: '#{@http2.keepalive_max}', Connection: '#{@connection}', PID: '#{Process.pid}')."
     end
   end
 
@@ -236,13 +235,13 @@ private
     len = line.strip.hex
 
     if len > 0
-      read = @sock.read(len)
+      read = @conn.read(len)
       return :break if read == "" || read == "\n" || read == "\r\n"
       @response.body << read
       @http2.on_content_call(@args, read)
     end
 
-    nl = @sock.gets
+    nl = @conn.gets
     if len == 0
       if nl == "\n" || nl == "\r\n"
         return :break

@@ -6,6 +6,7 @@ class Http2::PostMultipartRequest
     @phash = @args[:post].clone
     @http2.autostate_set_on_post_hash(phash) if @http2.autostate
     @boundary = rand(36**50).to_s(36)
+    @conn = @http2.connection
   end
 
   def execute
@@ -13,11 +14,11 @@ class Http2::PostMultipartRequest
       puts "Http2: Header string: #{header_string}" if @debug
 
       @http2.mutex.synchronize do
-        @http2.write(header_string(praw))
+        @conn.write(header_string(praw))
 
         praw.rewind
         praw.each_line do |data|
-          @http2.sock_write(data)
+          @conn.sock_write(data)
         end
 
         return @http2.read_response(@args)

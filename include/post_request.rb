@@ -7,6 +7,7 @@ class Http2::PostRequest
     end
 
     @http2, @args, @debug, @nl = http2, http2.parse_args(args), http2.debug, http2.nl
+    @conn = @http2.connection
   end
 
   def execute
@@ -16,7 +17,7 @@ class Http2::PostRequest
       puts "Http2: Doing post." if @debug
       puts "Http2: Header str: #{header_str}" if @debug
 
-      @http2.write(header_string)
+      @conn.write(header_string)
       return @http2.read_response(@args)
     end
   end
