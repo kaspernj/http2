@@ -127,4 +127,11 @@ describe "Http2" do
       data["PHP_INPUT"].should eql("test1_test2_test3")
     end
   end
+
+  it "should follow redirects" do
+    Http2.new(host: "http2test.kaspernj.org", follow_redirects: true) do |http|
+      resp = http.get("redirect_test.php")
+      resp.code.should eq "200"
+    end
+  end
 end

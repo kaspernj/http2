@@ -50,7 +50,7 @@ class Http2::ResponseReader
 
   def finish
     #Check if we should reconnect based on keep-alive-max.
-    if @keepalive_max == 1 or @connection == "close"
+    if @keepalive_max == 1 || @connection == "close"
       @sock.close unless @sock.closed?
     end
 
@@ -63,33 +63,38 @@ class Http2::ResponseReader
 
     @response.validate!
     check_and_decode
-    check_and_follow_redirect
+    @http2.autostate_register(@response) if @http2.args[:autostate]
     handle_errors
 
-    @http2.autostate_register(@response) if @http2.args[:autostate]
+    if response = check_and_follow_redirect
+      @response = response
+    end
   end
 
 private
 
   def check_and_follow_redirect
-    if (@response.args[:code].to_s == "302" || @response.args[:code].to_s == "307") && @response.header?("location") && (!@http2.args.key?(:follow_redirects) || @http2.args[:follow_redirects])
-      uri = URI.parse(@response.header("location"))
-      url = uri.path
-      url << "?#{uri.query}" if uri.query.to_s.length > 0
+    if (@response.code == "302" || @response.code == "307") && @response.header?("location") && @http2.args[:follow_redirects]
+      url, args = url_and_args_from_location
 
-      args = {:host => uri.host}
-      args[:ssl] = true if uri.scheme == "https"
-      args[:port] = uri.port if uri.port
-
-      puts "Http2: Redirecting from location-header to '#{url}'." if @debug
-
-      if !args[:host] or args[:host] == @args[:host]
-        return self.get(url)
+      if !args[:host] || args[:host] == @args[:host]
+        return @http2.get(url)
       else
-        http = Http2.new(args)
-        return http.get(url)
+        Http2.new(args).get(url)
       end
     end
+  end
+
+  def url_and_args_from_location
+    uri = URI.parse(@response.header("location"))
+    url = uri.path
+    url << "?#{uri.query}" if uri.query.to_s.length > 0
+
+    args = {host: uri.host}
+    args[:ssl] = true if uri.scheme == "https"
+    args[:port] = uri.port if uri.port
+
+    return [url, args]
   end
 
   def check_and_decode
@@ -113,16 +118,16 @@ private
   end
 
   def handle_errors
-    if @http2.raise_errors
-      if @response.args[:code].to_i == 500
-        err = Http2::Errors::Internalserver.new("A internal server error occurred")
-      elsif @response.args[:code].to_i == 403
-        err = Http2::Errors::Noaccess.new("No access")
-      elsif @response.args[:code].to_i == 400
-        err = Http2::Errors::Badrequest.new("Bad request")
-      elsif @response.args[:code].to_i == 404
-        err = Http2::Errors::Notfound.new("Not found")
-      end
+    return unless  @http2.raise_errors
+
+    if @response.args[:code].to_i == 500
+      err = Http2::Errors::Internalserver.new("A internal server error occurred")
+    elsif @response.args[:code].to_i == 403
+      err = Http2::Errors::Noaccess.new("No access")
+    elsif @response.args[:code].to_i == 400
+      err = Http2::Errors::Badrequest.new("Bad request")
+    elsif @response.args[:code].to_i == 404
+      err = Http2::Errors::Notfound.new("Not found")
     end
 
     if err
@@ -175,36 +180,41 @@ private
   def parse_header(line)
     if match = line.match(/^(.+?):\s*(.+)#{@nl}$/)
       key = match[1].to_s.downcase
-
-      parse_cookie(match[2]) if key == "set-cookie"
-      parse_keep_alive(match[2]) if key == "keep-alive"
-      parse_content_type(match[2]) if key == "content-type"
-
-      if key == "connection"
-        @connection = match[2].to_s.downcase
-      elsif key == "content-encoding"
-        @encoding = match[2].to_s.downcase
-        puts "Http2: Setting encoding to #{@encoding}" if @debug
-      elsif key == "content-length"
-        @length = match[2].to_i
-      elsif key == "transfer-encoding"
-        @transfer_encoding = match[2].to_s.downcase.strip
-      end
-
-      puts "Http2: Parsed header: #{match[1]}: #{match[2]}" if @debug
-      @response.headers[key] = [] unless @response.headers.key?(key)
-      @response.headers[key] << match[2]
-
-      if key != "transfer-encoding" && key != "content-length" && key != "connection" && key != "keep-alive"
-        @http2.on_content_call(@args, line)
-      end
+      set_header_special_values(key, match[2])
+      parse_normal_header(line, key, match[1], match[2])
     elsif match = line.match(/^HTTP\/([\d\.]+)\s+(\d+)\s+(.+)$/)
       @response.args[:code] = match[2]
       @response.args[:http_version] = match[1]
-
       @http2.on_content_call(@args, line)
     else
       raise "Could not understand header string: '#{line}'.\n\n#{@sock.read(409600)}"
+    end
+  end
+
+  def set_header_special_values(key, value)
+    parse_cookie(value) if key == "set-cookie"
+    parse_keep_alive(value) if key == "keep-alive"
+    parse_content_type(value) if key == "content-type"
+
+    if key == "connection"
+      @connection = value.downcase
+    elsif key == "content-encoding"
+      @encoding = value.downcase
+      puts "Http2: Setting encoding to #{@encoding}" if @debug
+    elsif key == "content-length"
+      @length = value.to_i
+    elsif key == "transfer-encoding"
+      @transfer_encoding = value.downcase.strip
+    end
+  end
+
+  def parse_normal_header(line, key, orig_key, value)
+    puts "Http2: Parsed header: #{orig_key}: #{value}" if @debug
+    @response.headers[key] = [] unless @response.headers.key?(key)
+    @response.headers[key] << value
+
+    if key != "transfer-encoding" && key != "content-length" && key != "connection" && key != "keep-alive"
+      @http2.on_content_call(@args, line)
     end
   end
 
