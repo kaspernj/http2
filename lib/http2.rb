@@ -30,6 +30,7 @@ class Http2
   end
 
   attr_reader :cookies, :args, :debug, :mutex, :resp, :raise_errors, :nl
+  attr_accessor :keepalive_max, :keepalive_timeout
 
   VALID_ARGUMENTS_INITIALIZE = [:host, :port, :ssl, :nl, :user_agent, :raise_errors, :follow_redirects, :debug, :encoding_gzip, :autostate, :basic_auth, :extra_headers, :proxy]
   def initialize(args = {})

@@ -43,8 +43,8 @@ class Http2::ResponseReader
 
       check_line_read(line)
       stat = parse_body(line)
-      break if stat == "break"
-      next if stat == "next"
+      break if stat == :break
+      next if stat == :next
     end
   end
 
@@ -57,8 +57,8 @@ class Http2::ResponseReader
     # Validate that the response is as it should be.
     puts "Http2: Validating response." if @debug
 
-    if !@response.args[:code]
-      raise "No status-code was received from the server. Headers: '#{@response.headers}' Body: '#{resp.args[:body]}'."
+    if !@response.code
+      raise "No status-code was received from the server. Headers: '#{@response.headers}' Body: '#{resp.body}'."
     end
 
     @response.validate!
@@ -103,7 +103,7 @@ private
       puts "Http2: Decoding GZip." if @debug
       require "zlib"
       require "stringio"
-      io = StringIO.new(@response.args[:body])
+      io = StringIO.new(@response.body)
       gz = Zlib::GzipReader.new(io)
       untrusted_str = gz.read
 
@@ -113,20 +113,20 @@ private
         valid_string = untrusted_str.force_encoding("UTF-8").encode("UTF-8", :invalid => :replace, :replace => "").encode("UTF-8")
       end
 
-      @response.args[:body] = valid_string
+      @response.body = valid_string
     end
   end
 
   def handle_errors
     return unless  @http2.raise_errors
 
-    if @response.args[:code].to_i == 500
+    if @response.code == "500"
       err = Http2::Errors::Internalserver.new("A internal server error occurred")
-    elsif @response.args[:code].to_i == 403
+    elsif @response.code == "403"
       err = Http2::Errors::Noaccess.new("No access")
-    elsif @response.args[:code].to_i == 400
+    elsif @response.code == "400"
       err = Http2::Errors::Badrequest.new("Bad request")
-    elsif @response.args[:code].to_i == 404
+    elsif @response.code == "404"
       err = Http2::Errors::Notfound.new("Not found")
     end
 
@@ -153,25 +153,24 @@ private
 
   def parse_keep_alive(keep_alive_line)
     if ka_max = keep_alive_line.match(/max=(\d+)/)
-      @keepalive_max = ka_max[1].to_i
-      print "Http2: Keepalive-max set to: '#{@keepalive_max}'.\n" if @debug
+      @http2.keepalive_max = ka_max[1].to_i
+      puts "Http2: Keepalive-max set to: '#{@keepalive_max}'." if @debug
     end
 
     if ka_timeout = keep_alive_line.match(/timeout=(\d+)/)
-      @keepalive_timeout = ka_timeout[1].to_i
-      print "Http2: Keepalive-timeout set to: '#{@keepalive_timeout}'.\n" if @debug
+      @http2.keepalive_timeout = ka_timeout[1].to_i
+      puts "Http2: Keepalive-timeout set to: '#{@keepalive_timeout}'." if @debug
     end
   end
 
   def parse_content_type(content_type_line)
     if match_charset = content_type_line.match(/\s*;\s*charset=(.+)/i)
       @charset = match_charset[1].downcase
-      @response.args[:charset] = @charset
+      @response.charset = @charset
       content_type_line.gsub!(match_charset[0], "")
     end
 
-    @ctype = content_type_line
-    @response.args[:contenttype] = @content_type_line
+    @response.content_type = @content_type_line
   end
 
   #Parse a header-line and saves it on the object.
@@ -179,15 +178,15 @@ private
   # http.parse_header("Content-Type: text/html\r\n")
   def parse_header(line)
     if match = line.match(/^(.+?):\s*(.+)#{@nl}$/)
-      key = match[1].to_s.downcase
+      key = match[1].downcase
       set_header_special_values(key, match[2])
       parse_normal_header(line, key, match[1], match[2])
     elsif match = line.match(/^HTTP\/([\d\.]+)\s+(\d+)\s+(.+)$/)
-      @response.args[:code] = match[2]
-      @response.args[:http_version] = match[1]
+      @response.code = match[2]
+      @response.http_version = match[1]
       @http2.on_content_call(@args, line)
     else
-      raise "Could not understand header string: '#{line}'.\n\n#{@sock.read(409600)}"
+      raise "Could not understand header string: '#{line}'."
     end
   end
 
@@ -221,19 +220,15 @@ private
   #Parses the body based on given headers and saves it to the result-object.
   # http.parse_body(str)
   def parse_body(line)
-    if @response.args[:http_version] = "1.1"
-      return "break" if @length == 0
+    return :break if @length == 0
 
-      if @transfer_encoding == "chunked"
-        parse_body_chunked(line)
-      else
-        puts "Http2: Adding #{line.to_s.bytesize} to the body." if @debug
-        @response.args[:body] << line.to_s
-        @http2.on_content_call(@args, line)
-        return "break" if @response.header?("content-length") && @response.args[:body].length >= @response.header("content-length").to_i
-      end
+    if @transfer_encoding == "chunked"
+      return parse_body_chunked(line)
     else
-      raise "Dont know how to read HTTP version: '#{@resp.args[:http_version]}'."
+      puts "Http2: Adding #{line.to_s.bytesize} to the body." if @debug
+      @response.body << line
+      @http2.on_content_call(@args, line)
+      return :break if @response.content_length && @response.body.length >= @response.content_length
     end
   end
 
@@ -242,15 +237,15 @@ private
 
     if len > 0
       read = @sock.read(len)
-      return "break" if read == "" or (read == "\n" || read == "\r\n")
-      @response.args[:body] << read
+      return :break if read == "" || read == "\n" || read == "\r\n"
+      @response.body << read
       @http2.on_content_call(@args, read)
     end
 
     nl = @sock.gets
     if len == 0
       if nl == "\n" || nl == "\r\n"
-        return "break"
+        return :break
       else
         raise "Dont know what to do :'-("
       end

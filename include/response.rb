@@ -2,22 +2,23 @@
 class Http2::Response
   #All the data the response contains. Headers, body, cookies, requested URL and more.
   attr_reader :args
-  
+  attr_accessor :body, :charset, :code, :content_type, :http_version
+
   #This method should not be called manually.
   def initialize(args = {})
     @args = args
     @args[:headers] = {} if !@args.key?(:headers)
-    @args[:body] = "" if !@args.key?(:body)
+    @body = args[:body] || ""
     @debug = @args[:debug]
   end
-  
+
   #Returns headers given from the host for the result.
   #===Examples
   # headers_hash = res.headers
   def headers
     return @args[:headers]
   end
-  
+
   #Returns a certain header by name or false if not found.
   #===Examples
   # val = res.header("content-type")
@@ -25,7 +26,7 @@ class Http2::Response
     return false if !@args[:headers].key?(key)
     return @args[:headers][key].first.to_s
   end
-  
+
   #Returns true if a header of the given string exists.
   #===Examples
   # print "No content-type was given." if !http.header?("content-type")
@@ -33,40 +34,11 @@ class Http2::Response
     return true if @args[:headers].key?(key) and @args[:headers][key].first.to_s.length > 0
     return false
   end
-  
-  #Returns the code of the result (200, 404, 500 etc).
-  #===Examples
-  # print "An internal error occurred." if res.code.to_i == 500
-  def code
-    return @args[:code]
+
+  def content_length
+    header("content-length").to_i if header?("content-length")
   end
-  
-  #Returns the HTTP-version of the result.
-  #===Examples
-  # print "We are using HTTP 1.1 and should support keep-alive." if res.http_version.to_s == "1.1"
-  def http_version
-    return @args[:http_version]
-  end
-  
-  #Returns the complete body of the result as a string.
-  #===Examples
-  # print "Looks like we caught the end of it as well?" if res.body.to_s.downcase.index("</html>") != nil
-  def body
-    return @args[:body]
-  end
-  
-  #Returns the charset of the result.
-  def charset
-    return @args[:charset]
-  end
-  
-  #Returns the content-type of the result as a string.
-  #===Examples
-  # print "This body can be printed - its just plain text!" if http.contenttype == "text/plain"
-  def contenttype
-    return @args[:contenttype]
-  end
-  
+
   #Returns the requested URL as a string.
   #===Examples
   # res.requested_url #=> "?show=status&action=getstatus"
@@ -74,28 +46,28 @@ class Http2::Response
     raise "URL could not be detected." if !@args[:request_args][:url]
     return @args[:request_args][:url]
   end
-  
+
   # Checks the data that has been sat on the object and raises various exceptions, if it does not validate somehow.
   def validate!
     puts "Http2: Validating response length." if @debug
     validate_body_versus_content_length!
   end
-  
+
   private
-  
+
   # Checks that the length of the body is the same as the given content-length if given.
   def validate_body_versus_content_length!
     unless self.header?("content-length")
       puts "Http2: No content length given - skipping length validation." if @debug
       return nil
     end
-    
+
     content_length = self.header("content-length").to_i
-    body_length = @args[:body].to_s.bytesize
-    
+    body_length = @body.bytesize
+
     puts "Http2: Body length: #{body_length}" if @debug
     puts "Http2: Content length: #{content_length}" if @debug
-    
+
     raise "Body does not match the given content-length: '#{body_length}', '#{content_length}'." if body_length != content_length
   end
 end
