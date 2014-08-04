@@ -32,7 +32,7 @@ class Http2
   attr_reader :autostate, :connection, :cookies, :args, :debug, :mutex, :resp, :raise_errors, :nl
   attr_accessor :keepalive_max, :keepalive_timeout
 
-  VALID_ARGUMENTS_INITIALIZE = [:host, :port, :ssl, :nl, :user_agent, :raise_errors, :follow_redirects, :debug, :encoding_gzip, :autostate, :basic_auth, :extra_headers, :proxy]
+  VALID_ARGUMENTS_INITIALIZE = [:host, :port, :skip_port_in_host_header, :ssl, :nl, :user_agent, :raise_errors, :follow_redirects, :debug, :encoding_gzip, :autostate, :basic_auth, :extra_headers, :proxy]
   def initialize(args = {})
     @args = parse_init_args(args)
     set_default_values
@@ -126,7 +126,7 @@ class Http2
     port = args[:port] || @args[:port]
 
     headers["Host"] = host
-    headers["Host"] << ":#{port}" unless port && [80, 443].include?(port.to_i)
+    headers["Host"] << ":#{port}" if port && ![80, 443].include?(port.to_i) && !@args[:skip_port_in_host_header]
     headers["Accept-Encoding"] = "gzip" if @args[:encoding_gzip]
 
     if @args[:basic_auth]
