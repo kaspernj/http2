@@ -50,6 +50,15 @@ class Http2
     end
   end
 
+  def new_url
+    builder = Http2::UrlBuilder.new
+    builder.host = @args[:host]
+    builder.port = @args[:port]
+    builder.protocol = @args[:protocol]
+
+    return builder
+  end
+
   # Closes current connection if any, changes the arguments on the object and reconnects keeping all cookies and other stuff intact.
   def change(args)
     @args.merge!(args)
