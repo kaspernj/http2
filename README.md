@@ -22,6 +22,8 @@ Http2.new(:host => "www.google.dk") do |http|
     "some_post_val" => "some_value"
   })
   
+  res.content_type #=> "text/html"
+  
   #Post-multipart (upload).
   res = http.post_multipart(:url => "path/to/something", :post => {
     "test_file1" => {
