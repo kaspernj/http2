@@ -5,11 +5,11 @@ describe "Http2" do
     require "json"
 
     #Test posting keep-alive and advanced post-data.
-    Http2.new(:host => "www.partyworm.dk", :debug => false) do |http|
+    Http2.new(host: "www.partyworm.dk", debug: false) do |http|
       0.upto(5) do
         resp = http.get("multipart_test.php")
 
-        resp = http.post(:url => "multipart_test.php?choice=post-test", :post => {
+        resp = http.post(url: "multipart_test.php?choice=post-test", post: {
           "val1" => "test1",
           "val2" => "test2",
           "val3" => [
@@ -29,40 +29,52 @@ describe "Http2" do
         })
         res = JSON.parse(resp.body)
 
-        raise "Expected 'res' to be a hash." if !res.is_a?(Hash)
-        raise "Error 1" if res["val1"] != "test1"
-        raise "Error 2" if res["val2"] != "test2"
-        raise "Error 3" if !res["val3"] or res["val3"][0] != "test3"
-        raise "Error 4" if res["val4"]["val5"] != "test5"
-        raise "Error 5" if res["val6"]["val7"][0]["val8"] != "test8"
-        raise "Array error: '#{res["val9"]}'." if res["val9"][0] != "a" or res["val9"][1] != "b" or res["val9"][2] != "d"
+        res.is_a?(Hash).should eq true
+        res["val1"].should eq "test1"
+        res["val2"].should eq "test2"
+        res["val3"][0].should eq "test3"
+        res["val4"]["val5"].should eq "test5"
+        res["val6"]["val7"][0]["val8"].should eq "test8"
+        res["val9"][0].should eq "a"
+        res["val9"][1].should eq "b"
+        res["val9"][2].should eq "d"
       end
     end
   end
 
+  it "#reconnect" do
+    Http2.new(host: "www.partyworm.dk", follow_redirects: false, encoding_gzip: false, debug: false) do |http|
+      resp1 = http.get("multipart_test.php")
+      http.reconnect
+      resp2 = http.get("multipart_test.php")
+
+      resp1.body.should eq resp2.body
+    end
+  end
+
   it "should be able to do multipart-requests and keep-alive when using multipart." do
-    Http2.new(:host => "www.partyworm.dk", :follow_redirects => false, :encoding_gzip => false, :debug => false) do |http|
+    Http2.new(host: "www.partyworm.dk", follow_redirects: false, encoding_gzip: false, debug: false) do |http|
       0.upto(5) do
         fpath = File.realpath(__FILE__)
         fpath2 = "#{File.realpath(File.dirname(__FILE__))}/../lib/http2.rb"
 
-        resp = http.post_multipart(:url => "multipart_test.php", :post => {
+        resp = http.post_multipart(url: "multipart_test.php", post: {
           "test_var" => "true",
           "test_file1" => {
-            :fpath => fpath,
-            :filename => "specfile"
+            fpath: fpath,
+            filename: "specfile"
           },
           "test_file2" => {
-            :fpath => fpath2,
-            :filename => "http2.rb"
+            fpath: fpath2,
+            filename: "http2.rb"
           }
         })
 
         data = JSON.parse(resp.body)
 
-        raise "Expected 'test_var' post to be 'true' but it wasnt: '#{data["post"]["test_var"]}'." if data["post"]["test_var"] != "true"
-        raise "Expected 'test_file1' to be the same as file but it wasnt:\n#{data["files_data"]["test_file1"]}\n\n#{File.read(fpath)}" if data["files_data"]["test_file1"] != File.read(fpath)
-        raise "Expected 'test_file2' to be the same as file but it wasnt:\n#{data["files_data"]["test_file2"]}\n\n#{File.read(fpath)}" if data["files_data"]["test_file2"] != File.read(fpath2)
+        data["post"]["test_var"].should eq "true"
+        data["files_data"]["test_file1"].should eq File.read(fpath)
+        data["files_data"]["test_file2"].should eq File.read(fpath2)
       end
     end
   end
@@ -76,12 +88,12 @@ describe "Http2" do
     ]
     urls = ["robots.txt"]
 
-    Http2.new(:host => "www.partyworm.dk", :debug => false) do |http|
+    Http2.new(host: "www.partyworm.dk", debug: false) do |http|
       0.upto(105) do |count|
         url = urls[rand(urls.size)]
         #print "Doing request #{count} of 200 (#{url}).\n"
         res = http.get(url)
-        raise "Body was empty." if res.body.to_s.length <= 0
+        res.body.to_s.length.should > 0
       end
     end
   end
@@ -93,17 +105,17 @@ describe "Http2" do
 
   it "should raise exception when something is not found" do
     expect{
-      Http2.new(:host => "www.partyworm.dk") do |http|
+      Http2.new(host: "www.partyworm.dk") do |http|
         http.get("something_that_does_not_exist.php")
       end
     }.to raise_error(::Http2::Errors::Notfound)
   end
 
   it "should be able to post json" do
-    Http2.new(:host => "http2test.kaspernj.org") do |http|
+    Http2.new(host: "http2test.kaspernj.org") do |http|
       res = http.post(
-        :url => "/jsontest.php",
-        :json => {:testkey => "testvalue"}
+        url: "/jsontest.php",
+        json: {testkey: "testvalue"}
       )
 
       data = JSON.parse(res.body)
@@ -115,7 +127,7 @@ describe "Http2" do
   it "should be able to post custom content types" do
     require "json"
 
-    Http2.new(:host => "http2test.kaspernj.org") do |http|
+    Http2.new(host: "http2test.kaspernj.org") do |http|
       res = http.post(
         url: "content_type_test.php",
         content_type: "plain/text",
@@ -129,7 +141,7 @@ describe "Http2" do
   end
 
   it "should set various timeouts" do
-    Http2.new(:host => "http2test.kaspernj.org") do |http|
+    Http2.new(host: "http2test.kaspernj.org") do |http|
       res = http.get("content_type_test.php")
       http.keepalive_timeout.should eq 5
       http.keepalive_max.should eq 100

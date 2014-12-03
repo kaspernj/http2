@@ -50,6 +50,10 @@ class Http2
     end
   end
 
+  def reconnect
+    @connection.reconnect
+  end
+
   def new_url
     builder = Http2::UrlBuilder.new
     builder.host = @args[:host]

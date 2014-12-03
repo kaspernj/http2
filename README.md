@@ -16,14 +16,14 @@ Http2.new(:host => "www.google.dk") do |http|
   puts res.body
   puts "All response-headers: #{res.headers}"
   puts "Specific header: #{res.header("HeaderName")}"
-  
+
   #Post-request.
   res = http.post(:url => "path/to/something", :post => {
     "some_post_val" => "some_value"
   })
-  
+
   res.content_type #=> "text/html"
-  
+
   #Post-multipart (upload).
   res = http.post_multipart(:url => "path/to/something", :post => {
     "test_file1" => {
@@ -31,13 +31,22 @@ Http2.new(:host => "www.google.dk") do |http|
       :filename => "specfile"
     }
   })
-  
+
   puts "Cookies until now: #{http.cookies}"
 end
 ```
 
+
+## Reconnect
+
+Handy when doing retries.
+
+```ruby
+http.reconnect
+```
+
 ## Contributing to http2
- 
+
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet.
 * Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it.
 * Fork the project.
