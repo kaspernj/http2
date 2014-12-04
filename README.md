@@ -10,7 +10,7 @@ Example of usage:
 require "rubygems"
 require "http2"
 
-Http2.new(:host => "www.google.dk") do |http|
+Http2.new(host: "www.google.dk") do |http|
   #Get-request.
   res = http.get("path/to/something")
   puts res.body
@@ -18,17 +18,17 @@ Http2.new(:host => "www.google.dk") do |http|
   puts "Specific header: #{res.header("HeaderName")}"
 
   #Post-request.
-  res = http.post(:url => "path/to/something", :post => {
+  res = http.post(url: "path/to/something", post: {
     "some_post_val" => "some_value"
   })
 
   res.content_type #=> "text/html"
 
   #Post-multipart (upload).
-  res = http.post_multipart(:url => "path/to/something", :post => {
+  res = http.post_multipart(url: "path/to/something", post: {
     "test_file1" => {
-      :fpath => fpath,
-      :filename => "specfile"
+      fpath: fpath,
+      filename: "specfile"
     }
   })
 
@@ -59,4 +59,3 @@ http.reconnect
 
 Copyright (c) 2012 Kasper Johansen. See LICENSE.txt for
 further details.
-

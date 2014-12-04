@@ -1,9 +1,8 @@
-require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
+require "spec_helper"
+require "json"
 
 describe "Http2" do
   it "should be able to do normal post-requests." do
-    require "json"
-
     #Test posting keep-alive and advanced post-data.
     Http2.new(host: "www.partyworm.dk", debug: false) do |http|
       0.upto(5) do
