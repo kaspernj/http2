@@ -36,6 +36,28 @@ Http2.new(host: "www.google.dk") do |http|
 end
 ```
 
+## Get parameters.
+
+```ruby
+http.host => example.com
+http.port => 80
+```
+
+## Response details.
+
+```ruby
+resp = http.get("path/to/something")
+resp.content_type #=> "text/html"
+resp.content_length #=> 136
+resp.header("content-length") #=> "136"
+resp.headers #=> {"content-type" => ["text/html"], "content-length" => ["136"]}
+resp.code #=> "200"
+resp.charset #=> "utf-8"
+resp.http_version #=> "1.1"
+resp.body #=> "<html><body>..."
+resp.requested_url #=> "http://example.com/maybe/redirected/path/to/something"
+```
+
 
 ## Reconnect
 
