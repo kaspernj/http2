@@ -7,7 +7,7 @@ class Http2::Response
   #This method should not be called manually.
   def initialize(args = {})
     @args = args
-    @args[:headers] = {} if !@args.key?(:headers)
+    @args[:headers] = {} unless @args.key?(:headers)
     @body = args[:body] || ""
     @debug = @args[:debug]
   end
@@ -31,7 +31,7 @@ class Http2::Response
   #===Examples
   # print "No content-type was given." if !http.header?("content-type")
   def header?(key)
-    return true if @args[:headers].key?(key) and @args[:headers][key].first.to_s.length > 0
+    return true if @args[:headers].key?(key) && @args[:headers][key].first.to_s.length > 0
     return false
   end
 
@@ -43,7 +43,7 @@ class Http2::Response
   #===Examples
   # res.requested_url #=> "?show=status&action=getstatus"
   def requested_url
-    raise "URL could not be detected." if !@args[:request_args][:url]
+    raise "URL could not be detected." unless @args[:request_args][:url]
     return @args[:request_args][:url]
   end
 
@@ -53,7 +53,7 @@ class Http2::Response
     validate_body_versus_content_length!
   end
 
-  private
+private
 
   # Checks that the length of the body is the same as the given content-length if given.
   def validate_body_versus_content_length!
@@ -62,7 +62,7 @@ class Http2::Response
       return nil
     end
 
-    content_length = self.header("content-length").to_i
+    content_length = header("content-length").to_i
     body_length = @body.bytesize
 
     puts "Http2: Body length: #{body_length}" if @debug

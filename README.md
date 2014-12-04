@@ -10,7 +10,7 @@ Example of usage:
 require "rubygems"
 require "http2"
 
-Http2.new(:host => "www.google.dk") do |http|
+Http2.new(host: "www.google.dk") do |http|
   #Get-request.
   res = http.get("path/to/something")
   puts res.body
@@ -18,22 +18,44 @@ Http2.new(:host => "www.google.dk") do |http|
   puts "Specific header: #{res.header("HeaderName")}"
 
   #Post-request.
-  res = http.post(:url => "path/to/something", :post => {
+  res = http.post(url: "path/to/something", post: {
     "some_post_val" => "some_value"
   })
 
   res.content_type #=> "text/html"
 
   #Post-multipart (upload).
-  res = http.post_multipart(:url => "path/to/something", :post => {
+  res = http.post_multipart(url: "path/to/something", post: {
     "test_file1" => {
-      :fpath => fpath,
-      :filename => "specfile"
+      fpath: fpath,
+      filename: "specfile"
     }
   })
 
   puts "Cookies until now: #{http.cookies}"
 end
+```
+
+## Get parameters.
+
+```ruby
+http.host => example.com
+http.port => 80
+```
+
+## Response details.
+
+```ruby
+resp = http.get("path/to/something")
+resp.content_type #=> "text/html"
+resp.content_length #=> 136
+resp.header("content-length") #=> "136"
+resp.headers #=> {"content-type" => ["text/html"], "content-length" => ["136"]}
+resp.code #=> "200"
+resp.charset #=> "utf-8"
+resp.http_version #=> "1.1"
+resp.body #=> "<html><body>..."
+resp.requested_url #=> "http://example.com/maybe/redirected/path/to/something"
 ```
 
 
@@ -59,4 +81,3 @@ http.reconnect
 
 Copyright (c) 2012 Kasper Johansen. See LICENSE.txt for
 further details.
-

@@ -53,7 +53,7 @@ private
 
   def generate_key_value(key, value)
     if value.is_a?(Hash) || value.is_a?(Array)
-      return ::Http2::PostDataGenerator.new(value, :orig_key => key).generate
+      return ::Http2::PostDataGenerator.new(value, orig_key: key).generate
     else
       data = ::Http2::PostDataGenerator.new(value).generate
       return "#{Http2::Utils.urlenc(key)}=#{Http2::Utils.urlenc(data)}"

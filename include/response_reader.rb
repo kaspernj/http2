@@ -4,7 +4,7 @@ class Http2::ResponseReader
   def initialize(args)
     @mode = "headers"
     @transfer_encoding = nil
-    @response = Http2::Response.new(:request_args => args, :debug => @debug)
+    @response = Http2::Response.new(request_args: args, debug: @debug)
     @rec_count = 0
     @args, @debug, @http2, @sock = args[:args], args[:http2].debug, args[:http2], args[:sock]
     @nl = @http2.nl
@@ -169,7 +169,7 @@ private
       content_type_line.gsub!(match_charset[0], "")
     end
 
-    @response.content_type = @content_type_line
+    @response.content_type = content_type_line
   end
 
   #Parse a header-line and saves it on the object.

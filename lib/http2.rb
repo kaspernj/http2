@@ -5,7 +5,7 @@ require "string-cases"
 
 #This class tries to emulate a browser in Ruby without any visual stuff. Remember cookies, keep sessions alive, reset connections according to keep-alive rules and more.
 #===Examples
-# Http2.new(:host => "www.somedomain.com", :port => 80, :ssl => false, :debug => false) do |http|
+# Http2.new(host: "www.somedomain.com", port: 80, ssl: false, debug: false) do |http|
 #  res = http.get("index.rhtml?show=some_page")
 #  html = res.body
 #  print html
@@ -23,7 +23,7 @@ class Http2
 
   #Converts a URL to "is.gd"-short-URL.
   def self.isgdlink(url)
-    Http2.new(:host => "is.gd") do |http|
+    Http2.new(host: "is.gd") do |http|
       resp = http.get("/api.php?longurl=#{url}")
       return resp.body
     end
@@ -50,14 +50,22 @@ class Http2
     end
   end
 
+  def host
+    @args[:host]
+  end
+
+  def port
+    @args[:port]
+  end
+
   def reconnect
     @connection.reconnect
   end
 
   def new_url
     builder = Http2::UrlBuilder.new
-    builder.host = @args[:host]
-    builder.port = @args[:port]
+    builder.host = host
+    builder.port = port
     builder.protocol = @args[:protocol]
 
     return builder
@@ -89,7 +97,7 @@ class Http2
   #Forces various stuff into arguments-hash like URL from original arguments and enables single-string-shortcuts and more.
   def parse_args(*args)
     if args.length == 1 && args.first.is_a?(String)
-      args = {:url => args.first}
+      args = {url: args.first}
     elsif args.length >= 2
       raise "Couldnt parse arguments."
     elsif args.is_a?(Array) && args.length == 1
@@ -116,9 +124,9 @@ class Http2
   # Proxies the request to another method but forces the method to be "DELETE".
   def delete(args)
     if args[:json]
-      return post(args.merge(:method => :delete))
+      return post(args.merge(method: :delete))
     else
-      return get(args.merge(:method => :delete))
+      return get(args.merge(method: :delete))
     end
   end
 
@@ -135,8 +143,8 @@ class Http2
     }
 
     #Possible to give custom host-argument.
-    host = args[:host] || @args[:host]
-    port = args[:port] || @args[:port]
+    host = args[:host] || self.host
+    port = args[:port] || self.port
 
     headers["Host"] = host
     headers["Host"] << ":#{port}" if port && ![80, 443].include?(port.to_i) && !@args[:skip_port_in_host_header]
@@ -212,6 +220,14 @@ class Http2
     ::Http2::ResponseReader.new(http2: self, sock: @sock, args: args).response
   end
 
+  def to_s
+    "<Http2 host: #{host}:#{port}>"
+  end
+
+  def inspect
+    to_s
+  end
+
 private
 
   #Registers the states from a result.
@@ -237,7 +253,7 @@ private
   end
 
   def parse_init_args(args)
-    args = {:host => args} if args.is_a?(String)
+    args = {host: args} if args.is_a?(String)
     raise "Arguments wasnt a hash." unless args.is_a?(Hash)
 
     args.each do |key, val|

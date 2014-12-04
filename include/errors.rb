@@ -3,7 +3,7 @@ class Http2::Errors
   class Http2error < RuntimeError
     attr_accessor :response
   end
-  
+
   class Noaccess < Http2error; end
   class Internalserver < Http2error; end
   class Notfound < Http2error; end
