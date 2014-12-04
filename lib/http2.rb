@@ -64,8 +64,8 @@ class Http2
 
   def new_url
     builder = Http2::UrlBuilder.new
-    builder.host = @args[:host]
-    builder.port = @args[:port]
+    builder.host = host
+    builder.port = port
     builder.protocol = @args[:protocol]
 
     return builder
@@ -143,8 +143,8 @@ class Http2
     }
 
     #Possible to give custom host-argument.
-    host = args[:host] || @args[:host]
-    port = args[:port] || @args[:port]
+    host = args[:host] || self.host
+    port = args[:port] || self.port
 
     headers["Host"] = host
     headers["Host"] << ":#{port}" if port && ![80, 443].include?(port.to_i) && !@args[:skip_port_in_host_header]
