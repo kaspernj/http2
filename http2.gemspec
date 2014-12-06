@@ -8,71 +8,28 @@ Gem::Specification.new do |s|
   s.name = "http2"
   s.version = "0.0.29"
 
-  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib"]
   s.authors = ["Kasper Johansen"]
-  s.date = "2014-12-04"
   s.description = "A lightweight framework for doing http-connections in Ruby. Supports cookies, keep-alive, compressing and much more."
   s.email = "k@spernj.org"
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.md"
   ]
-  s.files = [
-    ".document",
-    ".rspec",
-    "Gemfile",
-    "Gemfile.lock",
-    "LICENSE.txt",
-    "README.md",
-    "Rakefile",
-    "VERSION",
-    "http2.gemspec",
-    "include/connection.rb",
-    "include/errors.rb",
-    "include/get_request.rb",
-    "include/post_data_generator.rb",
-    "include/post_multipart_request.rb",
-    "include/post_request.rb",
-    "include/response.rb",
-    "include/response_reader.rb",
-    "include/url_builder.rb",
-    "include/utils.rb",
-    "lib/http2.rb",
-    "shippable.yml",
-    "spec/http2/post_data_generator_spec.rb",
-    "spec/http2/response_spec.rb",
-    "spec/http2/url_builder_spec.rb",
-    "spec/http2_spec.rb",
-    "spec/spec_helper.rb"
-  ]
+  s.files = Dir["{include,lib}/**/*"] + ["Rakefile"]
+  s.test_files = Dir["spec/**/*"]
   s.homepage = "http://github.com/kaspernj/http2"
   s.licenses = ["MIT"]
   s.rubygems_version = "2.4.0"
   s.summary = "A lightweight framework for doing http-connections in Ruby. Supports cookies, keep-alive, compressing and much more."
 
-  if s.respond_to? :specification_version then
-    s.specification_version = 4
-
-    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<string-cases>, [">= 0"])
-      s.add_development_dependency(%q<rspec>, ["~> 2.8.0"])
-      s.add_development_dependency(%q<rdoc>, ["~> 3.12"])
-      s.add_development_dependency(%q<bundler>, [">= 1.0.0"])
-      s.add_development_dependency(%q<jeweler>, [">= 1.8.4"])
-    else
-      s.add_dependency(%q<string-cases>, [">= 0"])
-      s.add_dependency(%q<rspec>, ["~> 2.8.0"])
-      s.add_dependency(%q<rdoc>, ["~> 3.12"])
-      s.add_dependency(%q<bundler>, [">= 1.0.0"])
-      s.add_dependency(%q<jeweler>, [">= 1.8.4"])
-    end
-  else
-    s.add_dependency(%q<string-cases>, [">= 0"])
-    s.add_dependency(%q<rspec>, ["~> 2.8.0"])
-    s.add_dependency(%q<rdoc>, ["~> 3.12"])
-    s.add_dependency(%q<bundler>, [">= 1.0.0"])
-    s.add_dependency(%q<jeweler>, [">= 1.8.4"])
-  end
+  s.add_runtime_dependency("string-cases", ">= 0")
+  s.add_development_dependency("rake")
+  s.add_development_dependency("rspec", "~> 2.8.0")
+  s.add_development_dependency("rdoc", "~> 3.12")
+  s.add_development_dependency("bundler", ">= 1.0.0")
+  s.add_development_dependency("hayabusa", ">= 0.0.25")
+  s.add_development_dependency("sqlite3")
+  s.add_development_dependency("codeclimate-test-reporter")
 end
 

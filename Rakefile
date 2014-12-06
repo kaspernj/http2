@@ -11,20 +11,6 @@ rescue Bundler::BundlerError => e
 end
 require 'rake'
 
-require 'jeweler'
-Jeweler::Tasks.new do |gem|
-  # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
-  gem.name = "http2"
-  gem.homepage = "http://github.com/kaspernj/http2"
-  gem.license = "MIT"
-  gem.summary = %Q{A lightweight framework for doing http-connections in Ruby. Supports cookies, keep-alive, compressing and much more.}
-  gem.description = %Q{A lightweight framework for doing http-connections in Ruby. Supports cookies, keep-alive, compressing and much more.}
-  gem.email = "k@spernj.org"
-  gem.authors = ["Kasper Johansen"]
-  # dependencies defined in Gemfile
-end
-Jeweler::RubygemsDotOrgTasks.new
-
 require 'rspec/core'
 require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:spec) do |spec|
@@ -47,3 +33,5 @@ Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
 end
+
+Bundler::GemHelper.install_tasks
