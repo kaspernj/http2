@@ -67,8 +67,8 @@ class Http2::Connection
     elsif @args[:proxy]
       connect_proxy
     else
-      print "Http2: Opening socket connection to '#{@args[:host]}:#{@args[:port]}'.\n" if @debug
-      @sock_plain = TCPSocket.new(@args[:host], @args[:port].to_i)
+      puts "Http2: Opening socket connection to '#{@http2.host}:#{@http2.port}'." if @debug
+      @sock_plain = TCPSocket.new(@http2.host, @http2.port)
     end
 
     if @args[:ssl]

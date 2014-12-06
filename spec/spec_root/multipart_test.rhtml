@@ -1,0 +1,28 @@
+<%
+  if _get["choice"] == "post-test"
+    print _post.to_json
+  elsif _get["choice"] == "file-test"
+    print File.read(_files["file"]["tmp_name"])
+  else
+    files = {}
+    files_hash = {}
+
+    _post.each do |key, val|
+      if val.is_a?(Hayabusa::Http_session::Post_multipart::File_upload)
+        files[key] = val.to_s
+        files_hash = {
+          "tmpname" => val.filename
+        }
+
+        _post[key] = {"tmpname" => val.filename}
+      end
+    end
+
+    print JSON.generate(
+      "get" => _get,
+      "post" => _post,
+      "files" => files_hash,
+      "files_data" => files
+    )
+  end
+%>

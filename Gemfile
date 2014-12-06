@@ -9,6 +9,8 @@ group :development do
   gem "rdoc", "~> 3.12"
   gem "bundler", ">= 1.0.0"
   gem "jeweler", ">= 1.8.4"
+  gem "hayabusa", ">= 0.0.25"
+  gem "sqlite3"
 end
 
 gem "codeclimate-test-reporter", group: :test, require: nil

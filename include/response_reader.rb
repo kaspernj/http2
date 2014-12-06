@@ -74,7 +74,7 @@ class Http2::ResponseReader
 private
 
   def check_and_follow_redirect
-    if (@response.code == "302" || @response.code == "307") && @response.header?("location") && @http2.args[:follow_redirects]
+    if (@response.code == "302" || @response.code == "303" || @response.code == "307") && @response.header?("location") && @http2.args[:follow_redirects]
       url, args = url_and_args_from_location
 
       if !args[:host] || args[:host] == @args[:host]
