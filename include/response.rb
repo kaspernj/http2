@@ -36,7 +36,13 @@ class Http2::Response
   end
 
   def content_length
-    header("content-length").to_i if header?("content-length")
+    if header?("content-length")
+      header("content-length").to_i
+    elsif @body
+      return @body.bytesize
+    else
+      raise "Couldn't calculate content-length."
+    end
   end
 
   #Returns the requested URL as a string.

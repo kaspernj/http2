@@ -146,7 +146,7 @@ class Http2
     host = args[:host] || self.host
     port = args[:port] || self.port
 
-    headers["Host"] = host
+    headers["Host"] = "#{host}" # Copy host string to avoid changing the original string if port has been given!
     headers["Host"] << ":#{port}" if port && ![80, 443].include?(port.to_i) && !@args[:skip_port_in_host_header]
     headers["Accept-Encoding"] = "gzip" if @args[:encoding_gzip]
 
