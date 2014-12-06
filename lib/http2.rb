@@ -15,13 +15,13 @@ require "string-cases"
 #  print "#{res.headers}"
 # end
 class Http2
-  #Autoloader for subclasses.
+  # Autoloader for subclasses.
   def self.const_missing(name)
     require "#{File.dirname(__FILE__)}/../include/#{::StringCases.camel_to_snake(name)}.rb"
     return Http2.const_get(name)
   end
 
-  #Converts a URL to "is.gd"-short-URL.
+  # Converts a URL to "is.gd"-short-URL.
   def self.isgdlink(url)
     Http2.new(host: "is.gd") do |http|
       resp = http.get("/api.php?longurl=#{url}")

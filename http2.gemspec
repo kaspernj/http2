@@ -31,5 +31,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency("hayabusa", ">= 0.0.25")
   s.add_development_dependency("sqlite3")
   s.add_development_dependency("codeclimate-test-reporter")
+  s.add_development_dependency("yajl-ruby")
 end
-

@@ -225,7 +225,7 @@ private
       return parse_body_chunked(line)
     else
       puts "Http2: Adding #{line.to_s.bytesize} to the body." if @debug
-      @response.body << line
+      @response.body << line unless skip_body?
       @http2.on_content_call(@args, line)
       return :break if @response.content_length && @response.body.length >= @response.content_length
     end
@@ -251,5 +251,11 @@ private
     end
 
     raise "Should have read newline but didnt: '#{nl}'." if nl != @nl
+  end
+
+private
+
+  def skip_body?
+    @args[:skip_body]
   end
 end
