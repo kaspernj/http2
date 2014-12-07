@@ -11,7 +11,7 @@ class Http2::PostMultipartRequest
 
   def execute
     generate_raw(@phash) do |helper, praw|
-      puts "Http2: Header string: #{header_string}" if @debug
+      @http2.debug "Header string: #{header_string}" if @debug
 
       @http2.mutex.synchronize do
         @conn.write(header_string(praw))

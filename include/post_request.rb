@@ -1,12 +1,12 @@
 class Http2::PostRequest
-  VALID_ARGUMENTS_POST = [:post, :url, :default_headers, :headers, :json, :method, :cookies, :on_content, :content_type]
+  VALID_ARGUMENTS_POST = [:body_as, :post, :url, :default_headers, :headers, :json, :method, :cookies, :on_content, :content_type]
 
   def initialize(http2, args)
     args.each do |key, val|
       raise "Invalid key: '#{key}'." unless VALID_ARGUMENTS_POST.include?(key)
     end
 
-    @http2, @args, @debug, @nl = http2, http2.parse_args(args), http2.debug, http2.nl
+    @http2, @args, @debug, @nl = http2, http2.parse_args(args), http2.debug?, http2.nl
     @conn = @http2.connection
   end
 
@@ -14,8 +14,8 @@ class Http2::PostRequest
     @data = raw_data
 
     @http2.mutex.synchronize do
-      puts "Http2: Doing post." if @debug
-      puts "Http2: Header str: #{header_str}" if @debug
+      @http2.debug "Doing post." if @debug
+      @http2.debug "Header str: #{header_str}" if @debug
 
       @conn.write(header_string)
       return @http2.read_response(@args)

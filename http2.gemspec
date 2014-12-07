@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
   s.summary = "A lightweight framework for doing http-connections in Ruby. Supports cookies, keep-alive, compressing and much more."
 
   s.add_runtime_dependency("string-cases", ">= 0")
+  s.add_runtime_dependency("thread_queues", ">= 0.0.2")
   s.add_development_dependency("rake")
   s.add_development_dependency("rspec", "~> 2.8.0")
   s.add_development_dependency("rdoc", "~> 3.12")
