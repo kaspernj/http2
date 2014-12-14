@@ -76,8 +76,8 @@ ub.build_params #=> "some_param=2&some_other_param=..."
 ub.build_path_and_params #=> "script.php?some_param=2"
 ub.params? #=> true
 ub.host #=> "www.google.com"
-ub.port => 80
-ub.path => "script.php"
+ub.port #=> 80
+ub.path #=> "script.php"
 ```
 
 ## Inspecting responses
