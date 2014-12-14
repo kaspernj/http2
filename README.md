@@ -36,6 +36,16 @@ res = http.post(url: "path/to/something", post: {
 })
 ```
 
+You can also post JSON like this:
+```ruby
+res = http.post(url: "path/to/something", json: {some_argument: true})
+```
+
+## Delete requests
+```ruby
+res = http.delete(url: "path/to/something")
+```
+
 ## File upload
 ```ruby
 res = http.post_multipart(url: "path/to/something", post: {
@@ -49,6 +59,23 @@ res = http.post_multipart(url: "path/to/something", post: {
 ## Reading cookies
 ```ruby
 puts "Cookies until now: #{http.cookies}"
+```
+
+## Building URL's
+```ruby
+ub = ::Http2::UrlBuilder.new
+ub.host = "www.google.com"
+ub.port = 80
+ub.path = "script.php"
+ub.params["some_param"] = 2
+
+ub.build #=> "http://www.google.com/..."
+ub.build_params #=> "some_param=2&some_other_param=..."
+ub.build_path_and_params #=> "script.php?some_param=2"
+ub.params? #=> true
+ub.host #=> "www.google.com"
+ub.port => 80
+ub.path => "script.php"
 ```
 
 ## Inspecting responses
