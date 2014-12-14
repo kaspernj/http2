@@ -18,6 +18,10 @@ end
 Or without using a block for ensuring closing of connection:
 ```ruby
 http = Http2.new(...)
+
+# Do requests here.
+
+http.close
 ```
 
 ## Get parameters.
