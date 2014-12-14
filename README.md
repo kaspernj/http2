@@ -11,7 +11,7 @@ require "rubygems"
 require "http2"
 
 Http2.new(host: "www.google.dk") do |http|
-  # Perform requests here.
+  # Do requests here.
 end
 ```
 
@@ -22,13 +22,6 @@ http = Http2.new(...)
 # Do requests here.
 
 http.close
-```
-
-## Get parameters.
-
-```ruby
-http.host #=> example.com
-http.port #=> 80
 ```
 
 ## Get requests
@@ -71,6 +64,13 @@ resp.charset #=> "utf-8"
 resp.http_version #=> "1.1"
 resp.body #=> "<html><body>..."
 resp.requested_url #=> "http://example.com/maybe/redirected/path/to/something"
+```
+
+## Get parameters later.
+
+```ruby
+http.host #=> example.com
+http.port #=> 80
 ```
 
 
