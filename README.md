@@ -11,14 +11,13 @@ require "rubygems"
 require "http2"
 
 Http2.new(host: "www.google.dk") do |http|
-  #Get-request.
-  res = http.get("path/to/something")
-  puts res.body
-  puts "All response-headers: #{res.headers}"
-  puts "Specific header: #{res.header("HeaderName")}"
-
-  res.content_type #=> "text/html"
+  # Perform requests here.
 end
+```
+
+Or without using a block for ensuring closing of connection:
+```ruby
+http = Http2.new(...)
 ```
 
 ## Get parameters.
@@ -28,7 +27,12 @@ http.host #=> example.com
 http.port #=> 80
 ```
 
-## Post
+## Get requests
+```ruby
+res = http.get("path/to/something")
+```
+
+## Post requests
 ```ruby
 res = http.post(url: "path/to/something", post: {
   "some_post_val" => "some_value"
@@ -50,7 +54,7 @@ res = http.post_multipart(url: "path/to/something", post: {
 puts "Cookies until now: #{http.cookies}"
 ```
 
-## Response details.
+## Inspecting responses
 
 ```ruby
 resp = http.get("path/to/something")
