@@ -4,7 +4,7 @@
 [![Code Climate](https://codeclimate.com/github/kaspernj/http2.png)](https://codeclimate.com/github/kaspernj/http2)
 [![Code Climate](https://codeclimate.com/github/kaspernj/http2/coverage.png)](https://codeclimate.com/github/kaspernj/http2)
 
-Example of usage:
+# Usage
 
 ```ruby
 require "rubygems"
@@ -17,30 +17,37 @@ Http2.new(host: "www.google.dk") do |http|
   puts "All response-headers: #{res.headers}"
   puts "Specific header: #{res.header("HeaderName")}"
 
-  #Post-request.
-  res = http.post(url: "path/to/something", post: {
-    "some_post_val" => "some_value"
-  })
-
   res.content_type #=> "text/html"
-
-  #Post-multipart (upload).
-  res = http.post_multipart(url: "path/to/something", post: {
-    "test_file1" => {
-      fpath: fpath,
-      filename: "specfile"
-    }
-  })
-
-  puts "Cookies until now: #{http.cookies}"
 end
 ```
 
 ## Get parameters.
 
 ```ruby
-http.host => example.com
-http.port => 80
+http.host #=> example.com
+http.port #=> 80
+```
+
+## Post
+```ruby
+res = http.post(url: "path/to/something", post: {
+  "some_post_val" => "some_value"
+})
+```
+
+## File upload
+```ruby
+res = http.post_multipart(url: "path/to/something", post: {
+  "test_file1" => {
+    fpath: fpath,
+    filename: "specfile"
+  }
+})
+```
+
+## Reading cookies
+```ruby
+puts "Cookies until now: #{http.cookies}"
 ```
 
 ## Response details.
