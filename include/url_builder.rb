@@ -8,7 +8,7 @@ class Http2::UrlBuilder
   def build_params
     url_params = ""
 
-    if !params.empty?
+    unless params.empty?
       first = true
 
       params.each do |key, val|

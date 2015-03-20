@@ -15,7 +15,7 @@ class Http2::PostRequest
 
     @http2.mutex.synchronize do
       puts "Http2: Doing post." if @debug
-      puts "Http2: Header str: #{header_str}" if @debug
+      puts "Http2: Header str: #{header_string}" if @debug
 
       @conn.write(header_string)
       return @http2.read_response(@args)
@@ -56,8 +56,19 @@ private
   end
 
   def headers
-    headers_hash = {"Content-Length" => @data.bytesize, "Content-Type" => content_type}
+    headers_hash = {
+      "Content-Length" => @data.bytesize,
+      "Content-Type" => content_type
+    }
     headers_hash.merge! @http2.default_headers(@args)
+
+    unless headers_hash["Accept"]
+      if @args[:json]
+        headers_hash["Accept"] = "application/json"
+      end
+    end
+
+    return headers_hash
   end
 
   def header_string

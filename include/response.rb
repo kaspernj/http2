@@ -45,6 +45,14 @@ class Http2::Response
     end
   end
 
+  def content_type
+    if header?("content-type")
+      return header("content-type")
+    else
+      raise "No content-type was given."
+    end
+  end
+
   #Returns the requested URL as a string.
   #===Examples
   # res.requested_url #=> "?show=status&action=getstatus"
@@ -57,6 +65,15 @@ class Http2::Response
   def validate!
     puts "Http2: Validating response length." if @debug
     validate_body_versus_content_length!
+  end
+
+  # Returns true if the result is JSON.
+  def json?
+    content_type == "application/json"
+  end
+
+  def json
+    @json ||= JSON.parse(body)
   end
 
 private
