@@ -38,7 +38,16 @@ res = http.post(url: "path/to/something", post: {
 })
 ```
 
-You can also post JSON like this:
+### Extra headers
+```ruby
+res = http.post(
+  url: "path",
+  headers: {"Auth": "123"},
+  post: {data: "test"}
+)
+```
+
+### Post JSON as content
 ```ruby
 res = http.post(url: "path/to/something", json: {some_argument: true})
 ```
