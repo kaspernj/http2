@@ -120,6 +120,10 @@ describe "Http2" do
       # Hack JSON data from Hayabusa.
       json_data = JSON.parse(data["_POST"].keys.first)
       json_data["testkey"].should eq "testvalue"
+
+      res.content_type.should eq "application/json"
+      res.json?.should eq true
+      res.json["_SERVER"]["REQUEST_METHOD"].should eq "POST"
     end
   end
 
