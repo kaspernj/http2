@@ -270,10 +270,4 @@ private
 
     raise "Should have read newline but didnt: '#{nl}'." if nl != @nl
   end
-
-private
-
-  def skip_body?
-    @args[:skip_body]
-  end
 end
