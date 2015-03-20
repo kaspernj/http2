@@ -6,14 +6,27 @@ class Http2::ResponseReader
     @transfer_encoding = nil
     @response = Http2::Response.new(request_args: args, debug: @debug)
     @rec_count = 0
-    @args, @debug, @http2, @sock = args[:args], args[:http2].debug, args[:http2], args[:sock]
+    @content_read_length = 0
+    @args, @debug, @http2, @sock = args[:args], args[:http2].debug?, args[:http2], args[:sock]
     @nl = @http2.nl
     @conn = @http2.connection
+  end
 
+  def read
     read_headers
-    read_body if @length == nil || @length > 0
+    read_body
     finish
   end
+
+  def wait_for_headers
+    sleep 0.05 while @mode == "headers"
+  end
+
+  def wait_for_body
+    sleep 0.05 until @mode == "finished"
+  end
+
+private
 
   def read_headers
     loop do
@@ -21,7 +34,7 @@ class Http2::ResponseReader
       check_line_read(line)
 
       if line == "\n" || line == "\r\n" || line == @nl
-        puts "Http2: Changing mode to body!" if @debug
+        @http2.debug "Changing mode to body!" if @debug
         raise "No headers was given at all? Possibly corrupt state after last request?" if @response.headers.empty?
         @mode = "body"
         @http2.on_content_call(@args, @nl)
@@ -33,6 +46,8 @@ class Http2::ResponseReader
   end
 
   def read_body
+    return if @length == 0
+
     loop do
       if @length
         line = @conn.read(@length)
@@ -44,7 +59,7 @@ class Http2::ResponseReader
       check_line_read(line)
       stat = parse_body(line)
       break if stat == :break
-      next if stat == :next
+      # next if stat == :next
     end
   end
 
@@ -55,14 +70,17 @@ class Http2::ResponseReader
     end
 
     # Validate that the response is as it should be.
-    puts "Http2: Validating response." if @debug
+    @http2.debug "Validating response." if @debug
 
-    if !@response.code
+    unless @response.code
       raise "No status-code was received from the server. Headers: '#{@response.headers}' Body: '#{resp.body}'."
     end
 
+    @mode = "finished"
+    @response.finish
     @response.validate!
     check_and_decode
+
     @http2.autostate_register(@response) if @http2.args[:autostate]
     handle_errors
 
@@ -70,8 +88,6 @@ class Http2::ResponseReader
       @response = response
     end
   end
-
-private
 
   def check_and_follow_redirect
     if (@response.code == "302" || @response.code == "303" || @response.code == "307") && @response.header?("location") && @http2.args[:follow_redirects]
@@ -100,7 +116,7 @@ private
   def check_and_decode
     # Check if the content is gzip-encoded - if so: decode it!
     if @encoding == "gzip"
-      puts "Http2: Decoding GZip." if @debug
+      @http2.debug "Decoding GZip." if @debug
       require "zlib"
       require "stringio"
       io = StringIO.new(@response.body)
@@ -110,7 +126,7 @@ private
       begin
         valid_string = ic.encode("UTF-8")
       rescue
-        valid_string = untrusted_str.force_encoding("UTF-8").encode("UTF-8", :invalid => :replace, :replace => "").encode("UTF-8")
+        valid_string = untrusted_str.force_encoding("UTF-8").encode("UTF-8", invalid: :replace, replace: "").encode("UTF-8")
       end
 
       @response.body = valid_string
@@ -153,10 +169,10 @@ private
   def parse_keep_alive(keep_alive_line)
     keep_alive_line.scan(/([a-z]+)=(\d+)/) do |match|
       if match[0] == "timeout"
-        puts "Http2: Keepalive-max set to: '#{@keepalive_max}'." if @debug
+        @http2.debug "Keepalive-max set to: '#{@keepalive_max}'." if @debug
         @http2.keepalive_timeout = match[1].to_i
       elsif match[0] == "max"
-        puts "Http2: Keepalive-timeout set to: '#{@keepalive_timeout}'." if @debug
+        @http2.debug "Keepalive-timeout set to: '#{@keepalive_timeout}'." if @debug
         @http2.keepalive_max = match[1].to_i
       end
     end
@@ -198,7 +214,7 @@ private
       @connection = value.downcase
     elsif key == "content-encoding"
       @encoding = value.downcase
-      puts "Http2: Setting encoding to #{@encoding}" if @debug
+      @http2.debug "Setting encoding to #{@encoding}" if @debug
     elsif key == "content-length"
       @length = value.to_i
     elsif key == "transfer-encoding"
@@ -207,7 +223,7 @@ private
   end
 
   def parse_normal_header(line, key, orig_key, value)
-    puts "Http2: Parsed header: #{orig_key}: #{value}" if @debug
+    @http2.debug "Parsed header: #{orig_key}: #{value}" if @debug
     @response.headers[key] = [] unless @response.headers.key?(key)
     @response.headers[key] << value
 
@@ -221,13 +237,15 @@ private
   def parse_body(line)
     return :break if @length == 0
 
+    @content_read_length += line.length
+
     if @transfer_encoding == "chunked"
       return parse_body_chunked(line)
     else
-      puts "Http2: Adding #{line.to_s.bytesize} to the body." if @debug
-      @response.body << line
+      @http2.debug "Adding #{line.to_s.bytesize} to the body." if @debug
+      @response.add_to_body(line)
       @http2.on_content_call(@args, line)
-      return :break if @response.content_length && @response.body.length >= @response.content_length
+      return :break if @response.content_length? && @content_read_length >= @response.content_length
     end
   end
 
@@ -237,7 +255,7 @@ private
     if len > 0
       read = @conn.read(len)
       return :break if read == "" || read == "\n" || read == "\r\n"
-      @response.body << read
+      @response.add_to_body(read)
       @http2.on_content_call(@args, read)
     end
 

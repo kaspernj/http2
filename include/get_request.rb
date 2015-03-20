@@ -1,17 +1,17 @@
 class Http2::GetRequest
   def initialize(http2, args)
-    @http2, @args, @debug, @nl = http2, http2.parse_args(args), http2.debug, http2.nl
+    @http2, @args, @debug, @nl = http2, http2.parse_args(args), http2.debug?, http2.nl
   end
 
   def execute
     @http2.mutex.synchronize do
-      puts "Http2: Writing headers: #{header_string}" if @debug
+      @http2.debug "Writing headers: #{header_string}" if @debug
       @http2.connection.write(header_string)
 
-      puts "Http2: Reading response." if @debug
+      @http2.debug "Reading response." if @debug
       resp = @http2.read_response(@args)
 
-      puts "Http2: Done with get request." if @debug
+      @http2.debug "Done with get request." if @debug
       return resp
     end
   end

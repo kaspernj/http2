@@ -15,13 +15,13 @@ require "string-cases"
 #  print "#{res.headers}"
 # end
 class Http2
-  #Autoloader for subclasses.
+  # Autoloader for subclasses.
   def self.const_missing(name)
     require "#{File.dirname(__FILE__)}/../include/#{::StringCases.camel_to_snake(name)}.rb"
     return Http2.const_get(name)
   end
 
-  #Converts a URL to "is.gd"-short-URL.
+  # Converts a URL to "is.gd"-short-URL.
   def self.isgdlink(url)
     Http2.new(host: "is.gd") do |http|
       resp = http.get("/api.php?longurl=#{url}")
@@ -29,7 +29,7 @@ class Http2
     end
   end
 
-  attr_reader :autostate, :connection, :cookies, :args, :debug, :mutex, :resp, :raise_errors, :nl
+  attr_reader :autostate, :connection, :cookies, :args, :mutex, :resp, :raise_errors, :nl
   attr_accessor :keepalive_max, :keepalive_timeout
 
   VALID_ARGUMENTS_INITIALIZE = [:host, :port, :skip_port_in_host_header, :ssl, :nl, :user_agent, :raise_errors, :follow_redirects, :debug, :encoding_gzip, :autostate, :basic_auth, :extra_headers, :proxy]
@@ -82,16 +82,16 @@ class Http2
   #===Examples
   # http.destroy
   def destroy
-    @args = nil
-    @cookies = nil
-    @debug = nil
-    @mutex = nil
-    @uagent = nil
-    @keepalive_timeout = nil
-    @request_last = nil
-
     @connection.destroy
     @connection = nil
+  end
+
+  def debug(message)
+    print "Http2: #{message}\n" if @debug
+  end
+
+  def debug?
+    return @debug
   end
 
   #Forces various stuff into arguments-hash like URL from original arguments and enables single-string-shortcuts and more.
@@ -217,7 +217,18 @@ class Http2
   #===Examples
   # res = http.read_response
   def read_response(args = {})
-    ::Http2::ResponseReader.new(http2: self, sock: @sock, args: args).response
+    response_reader = ::Http2::ResponseReader.new(http2: self, sock: @sock, args: args)
+
+    if args[:async]
+      Thread.new do
+        Thread.current.abort_on_exception = true
+        response_reader.read
+      end
+    else
+      response_reader.read
+    end
+
+    return response_reader.response
   end
 
   def to_s
@@ -232,7 +243,7 @@ private
 
   #Registers the states from a result.
   def autostate_register(res)
-    puts "Http2: Running autostate-register on result." if @debug
+    debug "Running autostate-register on result." if @debug
     @autostate_values.clear
 
     res.body.to_s.scan(/<input type="hidden" name="__(EVENTTARGET|EVENTARGUMENT|VIEWSTATE|LASTFOCUS)" id="(.*?)" value="(.*?)" \/>/) do |match|
@@ -240,7 +251,7 @@ private
       id = match[1]
       value = match[2]
 
-      puts "Http2: Registered autostate-value with name '#{name}' and value '#{value}'." if @debug
+      debug "Registered autostate-value with name '#{name}' and value '#{value}'." if @debug
       @autostate_values[name] = Http2::Utils.urldec(value)
     end
 

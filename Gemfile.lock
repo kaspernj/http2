@@ -3,6 +3,13 @@ PATH
   specs:
     http2 (0.0.29)
       string-cases
+      thread_queues (>= 0.0.2)
+
+PATH
+  remote: /home/kaspernj/Dev/Ruby/thread_queues
+  specs:
+    thread_queues (0.0.3)
+      string-cases
 
 GEM
   remote: http://rubygems.org/
@@ -62,6 +69,7 @@ GEM
     tpool (0.0.4)
     tsafe (0.0.11)
     wref (0.0.6)
+    yajl-ruby (1.2.1)
 
 PLATFORMS
   ruby
@@ -75,3 +83,5 @@ DEPENDENCIES
   rdoc (~> 3.12)
   rspec (~> 2.8.0)
   sqlite3
+  thread_queues!
+  yajl-ruby

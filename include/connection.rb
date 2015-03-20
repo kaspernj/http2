@@ -1,6 +1,6 @@
 class Http2::Connection
   def initialize(http2)
-    @http2, @debug, @args = http2, http2.debug, http2.args
+    @http2, @debug, @args = http2, http2.debug?, http2.args
     reconnect
   end
 
@@ -59,7 +59,7 @@ class Http2::Connection
 
   # Reconnects to the host.
   def reconnect
-    puts "Http2: Reconnect." if @debug
+    @http2.debug "Reconnect." if @debug
 
     #Open connection.
     if @args[:proxy] && @args[:ssl]
@@ -67,7 +67,7 @@ class Http2::Connection
     elsif @args[:proxy]
       connect_proxy
     else
-      puts "Http2: Opening socket connection to '#{@http2.host}:#{@http2.port}'." if @debug
+      @http2.debug "Opening socket connection to '#{@http2.host}:#{@http2.port}'." if @debug
       @sock_plain = TCPSocket.new(@http2.host, @http2.port)
     end
 
@@ -87,7 +87,7 @@ class Http2::Connection
     if @keepalive_timeout && @request_last
       between = Time.now.to_i - @request_last.to_i
       if between >= @keepalive_timeout
-        puts "Http2: We are over the keepalive-wait - returning false for socket_working?." if @debug
+        @http2.debug "We are over the keepalive-wait - returning false for socket_working?." if @debug
         return false
       end
     end
@@ -103,7 +103,7 @@ class Http2::Connection
   end
 
   def connect_proxy_ssl
-    puts "Http2: Initializing proxy stuff." if @debug
+    @http2.debug "Initializing proxy stuff." if @debug
     @sock_plain = TCPSocket.new(@args[:proxy][:host], @args[:proxy][:port])
 
     @sock_plain.write("CONNECT #{@args[:host]}:#{@args[:port]} HTTP/1.0#{@nl}")
@@ -122,12 +122,12 @@ class Http2::Connection
   end
 
   def connect_proxy
-    puts "Http2: Opening socket connection to '#{@args[:host]}:#{@args[:port]}' through proxy '#{@args[:proxy][:host]}:#{@args[:proxy][:port]}'." if @debug
+    @http2.debug "Opening socket connection to '#{@args[:host]}:#{@args[:port]}' through proxy '#{@args[:proxy][:host]}:#{@args[:proxy][:port]}'." if @debug
     @sock_plain = TCPSocket.new(@args[:proxy][:host], @args[:proxy][:port].to_i)
   end
 
   def apply_ssl
-    puts "Http2: Initializing SSL." if @debug
+    @http2.debug "Initializing SSL." if @debug
     require "openssl" unless ::Kernel.const_defined?(:OpenSSL)
 
     ssl_context = OpenSSL::SSL::SSLContext.new
