@@ -120,6 +120,19 @@ Handy when doing retries.
 http.reconnect
 ```
 
+
+## Basic HTTP authentication for all requests
+
+```ruby
+http = Http2.new(
+  host: "www.somehost.com",
+  basic_auth: {
+    user: "username",
+    passwd: "password"
+  }
+)
+```
+
 ## Contributing to http2
 
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet.
