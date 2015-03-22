@@ -57,6 +57,13 @@ res = http.post(
 res = http.post(url: "path/to/something", json: {some_argument: true})
 ```
 
+### Reading JSON from request
+```ruby
+res = http.post(url: "something", json: {some_argument: true})
+res.json? #=> true (if content-type is application/json)
+res.json #=> {value: "something"}
+```
+
 ## Delete requests
 ```ruby
 res = http.delete(url: "path/to/something")
