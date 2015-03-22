@@ -23,7 +23,7 @@ http = Http2.new(...)
 
 # Do requests here.
 
-http.close
+http.destroy # Closes the connection and frees up any variables used
 ```
 
 ## Get requests
