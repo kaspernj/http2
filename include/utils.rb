@@ -1,6 +1,6 @@
-#This class holds various methods for encoding, decoding and parsing of HTTP-related stuff.
+# This class holds various methods for encoding, decoding and parsing of HTTP-related stuff.
 class Http2::Utils
-  #URL-encodes a string.
+  # URL-encodes a string.
   def self.urlenc(string)
     #Thanks to CGI framework
     string.to_s.gsub(/([^ a-zA-Z0-9_.-]+)/) do
@@ -8,7 +8,7 @@ class Http2::Utils
     end.tr(' ', '+')
   end
 
-  #URL-decodes a string.
+  # URL-decodes a string.
   def self.urldec(string)
     #Thanks to CGI framework
     str = string.to_s.tr('+', ' ').gsub(/((?:%[0-9a-fA-F]{2})+)/) do
@@ -16,25 +16,35 @@ class Http2::Utils
     end
   end
 
-  #Parses a cookies-string and returns them in an array.
+  # Parses a cookies-string and returns them in an array.
   def self.parse_set_cookies(str)
-    str = String.new(str.to_s)
-    return [] if str.length <= 0
-    args = {}
+    str = "#{str}"
+    return [] if str.empty?
     cookie_start_regex = /^(.+?)=(.*?)(;\s*|$)/
 
     match = str.match(cookie_start_regex)
-    raise "Could not match cookie: '#{str}'." if !match
+    raise "Could not match cookie: '#{str}'" unless match
     str.gsub!(cookie_start_regex, "")
 
-    args["name"] = self.urldec(match[1].to_s)
-    args["value"] = self.urldec(match[2].to_s)
+    cookie_data = {
+      name: urldec(match[1].to_s),
+      value: self.urldec(match[2].to_s)
+    }
 
     while match = str.match(/(.+?)=(.*?)(;\s*|$)/)
       str = str.gsub(match[0], "")
-      args[match[1].to_s.downcase] = match[2].to_s
+      key = match[1].to_s.downcase
+      value = match[2].to_s
+
+      if key == "path" || key == "expires"
+        cookie_data[key.to_sym] = value
+      else
+        cookie_data[key] = value
+      end
     end
 
-    return [args]
+    cookie = Http2::Cookie.new(cookie_data)
+
+    return [cookie]
   end
 end

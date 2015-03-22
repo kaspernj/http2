@@ -1,8 +1,8 @@
 PATH
   remote: .
   specs:
-    http2 (0.0.29)
-      string-cases
+    http2 (0.0.30)
+      string-cases (~> 0)
 
 GEM
   remote: http://rubygems.org/
@@ -67,9 +67,9 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  bundler (>= 1.0.0)
+  bundler (~> 1.6.3)
   codeclimate-test-reporter
-  hayabusa (>= 0.0.25)
+  hayabusa (~> 0.0.25)
   http2!
   rake
   rdoc (~> 3.12)

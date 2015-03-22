@@ -74,14 +74,27 @@ class Http2::ResponseReader
 private
 
   def check_and_follow_redirect
-    if (@response.code == "302" || @response.code == "303" || @response.code == "307") && @response.header?("location") && @http2.args[:follow_redirects]
+    if redirect_response?
       url, args = url_and_args_from_location
 
-      if !args[:host] || args[:host] == @args[:host]
+      if redirect_using_same_connection?(args)
         return @http2.get(url)
       else
         ::Http2.new(args).get(url)
       end
+    end
+  end
+
+  REDIRECT_CODES = [302, 303, 307]
+  def redirect_response?
+    REDIRECT_CODES.include?(@response.code.to_i) && @response.header?("location") && @http2.args[:follow_redirects]
+  end
+
+  def redirect_using_same_connection?(args)
+    if !args[:host] || args[:host] == @args[:host]
+      return true
+    else
+      return false
     end
   end
 
@@ -145,8 +158,8 @@ private
   end
 
   def parse_cookie(cookie_line)
-    ::Http2::Utils.parse_set_cookies(cookie_line).each do |cookie_data|
-      @http2.cookies[cookie_data["name"]] = cookie_data
+    ::Http2::Utils.parse_set_cookies(cookie_line).each do |cookie|
+      @http2.cookies[cookie.name] = cookie
     end
   end
 

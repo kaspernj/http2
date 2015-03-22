@@ -6,7 +6,7 @@
 
 Gem::Specification.new do |s|
   s.name = "http2"
-  s.version = "0.0.29"
+  s.version = "0.0.30"
 
   s.require_paths = ["lib"]
   s.authors = ["Kasper Johansen"]
@@ -23,12 +23,12 @@ Gem::Specification.new do |s|
   s.rubygems_version = "2.4.0"
   s.summary = "A lightweight framework for doing http-connections in Ruby. Supports cookies, keep-alive, compressing and much more."
 
-  s.add_runtime_dependency("string-cases", ">= 0")
+  s.add_runtime_dependency("string-cases", "~> 0")
   s.add_development_dependency("rake")
   s.add_development_dependency("rspec", "~> 2.8.0")
   s.add_development_dependency("rdoc", "~> 3.12")
-  s.add_development_dependency("bundler", ">= 1.0.0")
-  s.add_development_dependency("hayabusa", ">= 0.0.25")
+  s.add_development_dependency("bundler", "~> 1.6.3")
+  s.add_development_dependency("hayabusa", "~> 0.0.25")
   s.add_development_dependency("sqlite3")
   s.add_development_dependency("codeclimate-test-reporter")
 end
