@@ -27,7 +27,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency("rake")
   s.add_development_dependency("rspec", "~> 2.8.0")
   s.add_development_dependency("rdoc", "~> 3.12")
-  s.add_development_dependency("bundler", "~> 1.6.3")
+  s.add_development_dependency("bundler", ">= 1.0.0")
   s.add_development_dependency("hayabusa", "~> 0.0.25")
   s.add_development_dependency("sqlite3")
   s.add_development_dependency("codeclimate-test-reporter")
