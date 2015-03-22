@@ -31,6 +31,11 @@ http.destroy # Closes the connection and frees up any variables used
 res = http.get("path/to/something")
 ```
 
+Or as a hash:
+```ruby
+res = http.get(url: "path/to/something")
+```
+
 ## Post requests
 ```ruby
 res = http.post(url: "path/to/something", post: {
