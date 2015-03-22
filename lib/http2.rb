@@ -15,13 +15,13 @@ require "string-cases"
 #  print "#{res.headers}"
 # end
 class Http2
-  #Autoloader for subclasses.
+  # Autoloader for subclasses.
   def self.const_missing(name)
     require "#{File.dirname(__FILE__)}/../include/#{::StringCases.camel_to_snake(name)}.rb"
     return Http2.const_get(name)
   end
 
-  #Converts a URL to "is.gd"-short-URL.
+  # Converts a URL to "is.gd"-short-URL.
   def self.isgdlink(url)
     Http2.new(host: "is.gd") do |http|
       resp = http.get("/api.php?longurl=#{url}")
@@ -78,7 +78,7 @@ class Http2
     @connection = ::Http2::Connection.new(self)
   end
 
-  #Destroys the object unsetting all variables and closing all sockets.
+  # Destroys the object unsetting all variables and closing all sockets.
   #===Examples
   # http.destroy
   def destroy
@@ -94,26 +94,22 @@ class Http2
     @connection = nil
   end
 
-  #Forces various stuff into arguments-hash like URL from original arguments and enables single-string-shortcuts and more.
+  # Forces various stuff into arguments-hash like URL from original arguments and enables single-string-shortcuts and more.
   def parse_args(*args)
     if args.length == 1 && args.first.is_a?(String)
       args = {url: args.first}
-    elsif args.length >= 2
-      raise "Couldnt parse arguments."
-    elsif args.is_a?(Array) && args.length == 1
+    elsif args.length == 1
       args = args.first
     else
-      raise "Invalid arguments: '#{args.class.name}'."
+      raise "Invalid arguments: '#{args.class.name}'"
     end
 
-    if args[:url].to_s.split("\n").length != 1
-      raise "Invalid URL: '#{args[:url]}'."
-    end
+    raise "Invalid URL: '#{args[:url]}'" unless args[:url].to_s.split("\n").length == 1
 
     return args
   end
 
-  #Returns a result-object based on the arguments.
+  # Returns a result-object based on the arguments.
   #===Examples
   # res = http.get("somepage.html")
   # print res.body #=> <String>-object containing the HTML gotten.
@@ -130,7 +126,7 @@ class Http2
     end
   end
 
-  #Returns the default headers for a request.
+  # Returns the default headers for a request.
   #===Examples
   # headers_hash = http.default_headers
   # print "#{headers_hash}"
@@ -139,15 +135,10 @@ class Http2
 
     headers = {
       "Connection" => "Keep-Alive",
-      "User-Agent" => @uagent
+      "User-Agent" => @uagent,
+      "Host" => host_header
     }
 
-    #Possible to give custom host-argument.
-    host = args[:host] || self.host
-    port = args[:port] || self.port
-
-    headers["Host"] = "#{host}" # Copy host string to avoid changing the original string if port has been given!
-    headers["Host"] << ":#{port}" if port && ![80, 443].include?(port.to_i) && !@args[:skip_port_in_host_header]
     headers["Accept-Encoding"] = "gzip" if @args[:encoding_gzip]
 
     if @args[:basic_auth]
@@ -160,21 +151,21 @@ class Http2
     return headers
   end
 
-  #Posts to a certain page.
+  # Posts to a certain page.
   #===Examples
   # res = http.post("login.php", {"username" => "John Doe", "password" => 123)
   def post(args)
     ::Http2::PostRequest.new(self, args).execute
   end
 
-  #Posts to a certain page using the multipart-method.
+  # Posts to a certain page using the multipart-method.
   #===Examples
   # res = http.post_multipart("upload.php", {"normal_value" => 123, "file" => Tempfile.new(?)})
   def post_multipart(*args)
     ::Http2::PostMultipartRequest.new(self, *args).execute
   end
 
-  #Returns a header-string which normally would be used for a request in the given state.
+  # Returns a header-string which normally would be used for a request in the given state.
   def header_str(headers_hash, args = {})
     headers_hash["Cookie"] = cookie_header_string
 
@@ -190,30 +181,33 @@ class Http2
     cstr = ""
 
     first = true
-    @cookies.each do |cookie_name, cookie_data|
+    @cookies.each do |cookie_name, cookie|
       cstr << "; " unless first
       first = false if first
-
-      if cookie_data.is_a?(Hash)
-        name = cookie_data["name"]
-        value = cookie_data["value"]
-      else
-        name = cookie_name
-        value = cookie_data
-      end
-
-      raise "Unexpected lines: #{value.lines.to_a.length}." if value.lines.to_a.length != 1
-      cstr << "#{Http2::Utils.urlenc(name)}=#{Http2::Utils.urlenc(value)}"
+      ensure_single_lines([cookie.name, cookie.value])
+      cstr << "#{Http2::Utils.urlenc(cookie.name)}=#{Http2::Utils.urlenc(cookie.value)}"
     end
 
     return cstr
+  end
+
+  def cookie(name)
+    name = name.to_s
+    return @cookies.fetch(name) if @cookies.key?(name)
+    raise "No cookie by that name: '#{name}' in '#{@cookies.keys.join(", ")}'"
+  end
+
+  def ensure_single_lines(*strings)
+    strings.each do |string|
+      raise "More than one line: #{string}." unless string.to_s.lines.to_a.length == 1
+    end
   end
 
   def on_content_call(args, str)
     args[:on_content].call(str) if args.key?(:on_content)
   end
 
-  #Reads the response after posting headers and data.
+  # Reads the response after posting headers and data.
   #===Examples
   # res = http.read_response
   def read_response(args = {})
@@ -230,7 +224,17 @@ class Http2
 
 private
 
-  #Registers the states from a result.
+  def host_header
+    #Possible to give custom host-argument.
+    host = args[:host] || self.host
+    port = args[:port] || self.port
+
+    host_header_string = "#{host}" # Copy host string to avoid changing the original string if port has been given!
+    host_header_string << ":#{port}" if port && ![80, 443].include?(port.to_i) && !@args[:skip_port_in_host_header]
+    return host_header_string
+  end
+
+  # Registers the states from a result.
   def autostate_register(res)
     puts "Http2: Running autostate-register on result." if @debug
     @autostate_values.clear
@@ -247,7 +251,7 @@ private
     raise "No states could be found." if @autostate_values.empty?
   end
 
-  #Sets the states on the given post-hash.
+  # Sets the states on the given post-hash.
   def autostate_set_on_post_hash(phash)
     phash.merge!(@autostate_values)
   end
