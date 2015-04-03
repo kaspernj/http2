@@ -61,7 +61,7 @@ res = http.post(url: "path/to/something", json: {some_argument: true})
 ```ruby
 res = http.post(url: "something", json: {some_argument: true})
 res.json? #=> true (if content-type is application/json)
-res.json #=> {value: "something"}
+res.json #=> {"value" => "something"}
 ```
 
 ## Delete requests
