@@ -26,6 +26,11 @@ http = Http2.new(...)
 http.destroy # Closes the connection and frees up any variables used
 ```
 
+Or through a proxy:
+```ruby
+Http2.new(host: "www.google.com", proxy: {host: "myproxy.com", port: 80, user: "myname", passwd: "mypassword"})
+```
+
 ## Get requests
 ```ruby
 res = http.get("path/to/something")
