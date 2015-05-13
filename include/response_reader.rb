@@ -57,8 +57,8 @@ class Http2::ResponseReader
     # Validate that the response is as it should be.
     puts "Http2: Validating response." if @debug
 
-    if !@response.code
-      raise "No status-code was received from the server. Headers: '#{@response.headers}' Body: '#{resp.body}'."
+    unless @response.code
+      raise "No status-code was received from the server. Headers: '#{@response.headers}' Body: '#{@response.body}'."
     end
 
     @response.validate!

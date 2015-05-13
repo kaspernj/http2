@@ -24,7 +24,7 @@ class Http2
   # Converts a URL to "is.gd"-short-URL.
   def self.isgdlink(url)
     Http2.new(host: "is.gd") do |http|
-      resp = http.get("/api.php?longurl=#{url}")
+      resp = http.get("api.php?longurl=#{url}")
       return resp.body
     end
   end
@@ -32,7 +32,7 @@ class Http2
   attr_reader :autostate, :connection, :cookies, :args, :debug, :mutex, :resp, :raise_errors, :nl
   attr_accessor :keepalive_max, :keepalive_timeout
 
-  VALID_ARGUMENTS_INITIALIZE = [:host, :port, :skip_port_in_host_header, :ssl, :nl, :user_agent, :raise_errors, :follow_redirects, :debug, :encoding_gzip, :autostate, :basic_auth, :extra_headers, :proxy]
+  VALID_ARGUMENTS_INITIALIZE = [:host, :port, :skip_port_in_host_header, :ssl, :ssl_skip_verify, :nl, :user_agent, :raise_errors, :follow_redirects, :debug, :encoding_gzip, :autostate, :basic_auth, :extra_headers, :proxy]
   def initialize(args = {})
     @args = parse_init_args(args)
     set_default_values
@@ -144,6 +144,12 @@ class Http2
     if @args[:basic_auth]
       require "base64" unless ::Kernel.const_defined?(:Base64)
       headers["Authorization"] = "Basic #{Base64.encode64("#{@args[:basic_auth][:user]}:#{@args[:basic_auth][:passwd]}").strip}"
+    end
+
+    if @args[:proxy] && @args[:proxy][:user] && @args[:proxy][:passwd] && !@connection.proxy_connect?
+      require "base64" unless ::Kernel.const_defined?(:Base64)
+      puts "Http2: Adding proxy auth header to request" if @debug
+      headers["Proxy-Authorization"] = "Basic #{Base64.encode64("#{@args[:proxy][:user]}:#{@args[:proxy][:passwd]}").strip}"
     end
 
     headers.merge!(@args[:extra_headers]) if @args[:extra_headers]
@@ -263,6 +269,8 @@ private
     args.each do |key, val|
       raise "Invalid key: '#{key}'." unless VALID_ARGUMENTS_INITIALIZE.include?(key)
     end
+
+    args[:proxy][:connect] = true if args[:proxy] && !args[:proxy].key?(:connect) && args[:ssl]
 
     raise "No host was given." unless args[:host]
     return args

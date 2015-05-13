@@ -31,6 +31,11 @@ Or through a proxy:
 Http2.new(host: "www.google.com", proxy: {host: "myproxy.com", port: 80, user: "myname", passwd: "mypassword"})
 ```
 
+You can also use SSL:
+```ruby
+Http2.new(host: "myhost.com", ssl: true, ssl_skip_verify: true)
+```
+
 ## Get requests
 ```ruby
 res = http.get("path/to/something")
