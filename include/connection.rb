@@ -1,17 +1,17 @@
 class Http2::Connection
   def initialize(http2)
-    @http2, @debug, @args = http2, http2.debug, http2.args
+    @http2, @debug, @args, @nl = http2, http2.debug, http2.args, http2.nl
     reconnect
   end
 
   def destroy
-    @sock.close if @sock and !@sock.closed?
+    @sock.close if @sock && !@sock.closed?
     @sock = nil
 
-    @sock_plain.close if @sock_plain and !@sock_plain.closed?
+    @sock_plain.close if @sock_plain && !@sock_plain.closed?
     @sock_plain = nil
 
-    @sock_ssl.close if @sock_ssl and !@sock_ssl.closed?
+    @sock_ssl.close if @sock_ssl && !@sock_ssl.closed?
     @sock_ssl = nil
   end
 
@@ -62,10 +62,12 @@ class Http2::Connection
     puts "Http2: Reconnect." if @debug
 
     #Open connection.
-    if @args[:proxy] && @args[:ssl]
-      connect_proxy_ssl
-    elsif @args[:proxy]
-      connect_proxy
+    if @args[:proxy]
+      if @args[:proxy][:connect]
+        connect_proxy_connect
+      else
+        connect_proxy
+      end
     else
       puts "Http2: Opening socket connection to '#{@http2.host}:#{@http2.port}'." if @debug
       @sock_plain = TCPSocket.new(@http2.host, @http2.port)
@@ -102,23 +104,39 @@ class Http2::Connection
     @sock_plain.close if @sock_plain && !@sock_plain.closed?
   end
 
-  def connect_proxy_ssl
-    puts "Http2: Initializing proxy stuff." if @debug
+  def connect_proxy_connect
+    puts "Http2: Initializing proxy connect to '#{@args[:host]}:#{@args[:port]}' through proxy '#{@args[:proxy][:host]}:#{@args[:proxy][:port]}'." if @debug
     @sock_plain = TCPSocket.new(@args[:proxy][:host], @args[:proxy][:port])
 
-    @sock_plain.write("CONNECT #{@args[:host]}:#{@args[:port]} HTTP/1.0#{@nl}")
-    @sock_plain.write("User-Agent: #{@uagent}#{@nl}")
+    connect = "CONNECT #{@args[:host]}:#{@args[:port]} HTTP/1.1#{@nl}"
+    puts "Http2: Sending connect: #{connect}" if @debug
+    @sock_plain.write(connect)
+
+    headers = {
+      "Host" => "#{@args[:host]}:#{@args[:port]}"
+    }
 
     if @args[:proxy][:user] && @args[:proxy][:passwd]
-      credential = ["#{@args[:proxy][:user]}:#{@args[:proxy][:passwd]}"].pack("m")
-      credential.delete!("\r\n")
-      @sock_plain.write("Proxy-Authorization: Basic #{credential}#{@nl}")
+      headers["Proxy-Authorization"] = "Basic #{["#{@args[:proxy][:user]}:#{@args[:proxy][:passwd]}"].pack("m").chomp}"
+    end
+
+    headers.each do |key, value|
+      header = "#{key}: #{value}"
+      puts "Http2: Sending header to proxy: #{header}" if @debug
+      @sock_plain.write("#{header}#{@nl}")
     end
 
     @sock_plain.write(@nl)
 
-    res = @sock_plain.gets
-    raise res if res.to_s.downcase != "http/1.0 200 connection established#{@nl}"
+    res = @sock_plain.gets.to_s
+    raise "Couldn't connect through proxy: #{res}" unless res.match(/^http\/1\.(0|1)\s+200/i)
+    @sock_plain.gets
+
+    @proxy_connect = true
+  end
+
+  def proxy_connect?
+    @proxy_connect
   end
 
   def connect_proxy
@@ -131,8 +149,7 @@ class Http2::Connection
     require "openssl" unless ::Kernel.const_defined?(:OpenSSL)
 
     ssl_context = OpenSSL::SSL::SSLContext.new
-    #ssl_context.verify_mode = OpenSSL::SSL::VERIFY_PEER
-
+    ssl_context.verify_mode = OpenSSL::SSL::VERIFY_PEER unless @args[:ssl_skip_verify]
     @sock_ssl = OpenSSL::SSL::SSLSocket.new(@sock_plain, ssl_context)
     @sock_ssl.sync_close = true
     @sock_ssl.connect
