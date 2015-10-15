@@ -36,6 +36,11 @@ You can also use SSL:
 Http2.new(host: "myhost.com", ssl: true, ssl_skip_verify: true)
 ```
 
+You can make it follow redirects like this:
+```ruby
+Http2.new(host: "myhost.com", follow_redirects: true)
+```
+
 ## Get requests
 ```ruby
 res = http.get("path/to/something")
