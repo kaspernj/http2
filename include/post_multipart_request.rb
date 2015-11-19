@@ -1,6 +1,8 @@
 require "tempfile"
 
 class Http2::PostMultipartRequest
+  attr_reader :headers_string
+
   def initialize(http2, *args)
     @http2, @nl, @args = http2, http2.nl, http2.parse_args(*args)
     @phash = @args[:post].clone
@@ -11,32 +13,31 @@ class Http2::PostMultipartRequest
 
   def execute
     generate_raw(@phash) do |helper, praw|
-      puts "Http2: Header string: #{header_string}" if @debug
+      puts "Http2: Header string: #{header_string_with_raw_post(praw)}" if @debug
 
       @http2.mutex.synchronize do
-        @conn.write(header_string(praw))
+        @conn.write(header_string_with_raw_post(praw))
 
         praw.rewind
         praw.each_line do |data|
           @conn.sock_write(data)
         end
 
-        return @http2.read_response(@args)
+        return @http2.read_response(self, @args)
       end
     end
   end
 
 private
 
-  def header_string(praw)
-    header_str = "POST /#{@args[:url]} HTTP/1.1#{@nl}"
-    header_str << @http2.header_str(@http2.default_headers(@args).merge(
+  def header_string_with_raw_post(praw)
+    @headers_string = "POST /#{@args[:url]} HTTP/1.1#{@nl}"
+    @headers_string << @http2.header_str(@http2.default_headers(@args).merge(
       "Content-Type" => "multipart/form-data; boundary=#{@boundary}",
       "Content-Length" => praw.size
     ), @args)
-    header_str << @nl
-
-    return header_str
+    @headers_string << @nl
+    @headers_string
   end
 
   def generate_raw(phash)

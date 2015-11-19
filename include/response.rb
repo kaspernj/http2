@@ -1,30 +1,31 @@
 #This object will be returned as the response for each request.
 class Http2::Response
   #All the data the response contains. Headers, body, cookies, requested URL and more.
-  attr_reader :args
+  attr_reader :args, :request
   attr_accessor :body, :charset, :code, :content_type, :http_version
 
   #This method should not be called manually.
   def initialize(args = {})
     @args = args
-    @args[:headers] = {} unless @args.key?(:headers)
+    @args[:headers] ||= {}
     @body = args[:body] || ""
-    @debug = @args[:debug]
+    @debug = args[:debug]
+    @request = args.fetch(:request)
   end
 
   #Returns headers given from the host for the result.
   #===Examples
   # headers_hash = res.headers
   def headers
-    return @args[:headers]
+    return @args.fetch(:headers)
   end
 
   #Returns a certain header by name or false if not found.
   #===Examples
   # val = res.header("content-type")
   def header(key)
-    return false if !@args[:headers].key?(key)
-    return @args[:headers][key].first.to_s
+    return false unless @args.fetch(:headers).key?(key)
+    return @args.fetch(:headers).fetch(key).first.to_s
   end
 
   #Returns true if a header of the given string exists.

@@ -5,15 +5,25 @@ class Http2::GetRequest
 
   def execute
     @http2.mutex.synchronize do
-      puts "Http2: Writing headers: #{header_string}" if @debug
-      @http2.connection.write(header_string)
+      puts "Http2: Writing headers: #{headers_string}" if @debug
+      @http2.connection.write(headers_string)
 
       puts "Http2: Reading response." if @debug
-      resp = @http2.read_response(@args)
+      resp = @http2.read_response(self, @args)
 
       puts "Http2: Done with get request." if @debug
       return resp
     end
+  end
+
+  def headers_string
+    unless @header_str
+      @header_str = "#{method} /#{@args[:url]} HTTP/1.1#{@nl}"
+      @header_str << @http2.header_str(@http2.default_headers(@args), @args)
+      @header_str << @nl
+    end
+
+    @header_str
   end
 
 private
@@ -24,11 +34,5 @@ private
     else
       "GET"
     end
-  end
-
-  def header_string
-    header_str = "#{method} /#{@args[:url]} HTTP/1.1#{@nl}"
-    header_str << @http2.header_str(@http2.default_headers(@args), @args)
-    header_str << @nl
   end
 end

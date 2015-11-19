@@ -10,6 +10,17 @@ class Http2::PostRequest
     @conn = @http2.connection
   end
 
+  def headers_string
+    unless @headers_string
+      @headers_string = "#{method} /#{@args[:url]} HTTP/1.1#{@nl}"
+      @headers_string << @http2.header_str(headers, @args)
+      @headers_string << @nl
+      @headers_string << @data
+    end
+
+    @headers_string
+  end
+
   def execute
     @data = raw_data
 
@@ -17,8 +28,8 @@ class Http2::PostRequest
       puts "Http2: Doing post." if @debug
       puts "Http2: Header str: #{header_string}" if @debug
 
-      @conn.write(header_string)
-      return @http2.read_response(@args)
+      @conn.write(headers_string)
+      return @http2.read_response(self, @args)
     end
   end
 
@@ -69,14 +80,5 @@ private
     end
 
     return headers_hash
-  end
-
-  def header_string
-    header_str = "#{method} /#{@args[:url]} HTTP/1.1#{@nl}"
-    header_str << @http2.header_str(headers, @args)
-    header_str << @nl
-    header_str << @data
-
-    header_str
   end
 end
