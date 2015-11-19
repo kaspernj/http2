@@ -155,6 +155,14 @@ http = Http2.new(
 )
 ```
 
+## Inspect the headers that were sent
+
+```ruby
+response = http.get("some_page")
+request = response.request
+request.headers_string #=> "GET /some_page\n..."
+```
+
 ## Contributing to http2
 
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet.
