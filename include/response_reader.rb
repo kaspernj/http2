@@ -100,11 +100,15 @@ private
 
   def url_and_args_from_location
     uri = URI.parse(@response.header("location"))
+
     url = uri.path
     url << "?#{uri.query}" if uri.query.to_s.length > 0
+    url = url.gsub(/\A\//, "")
 
     args = {host: uri.host}
     args[:ssl] = true if uri.scheme == "https"
+    args[:ssl_skip_verify] = @http2.args[:ssl_skip_verify]
+    args[:debug] = @http2.args[:debug]
     args[:port] = uri.port if uri.port
 
     return [url, args]
