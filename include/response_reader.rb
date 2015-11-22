@@ -4,7 +4,7 @@ class Http2::ResponseReader
   def initialize(args)
     @mode = "headers"
     @transfer_encoding = nil
-    @response = Http2::Response.new(request_args: args, debug: @debug)
+    @response = Http2::Response.new(request: args.fetch(:request), request_args: args, debug: @debug)
     @rec_count = 0
     @args, @debug, @http2, @sock = args[:args], args[:http2].debug, args[:http2], args[:sock]
     @nl = @http2.nl

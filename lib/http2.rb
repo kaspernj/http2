@@ -216,8 +216,8 @@ class Http2
   # Reads the response after posting headers and data.
   #===Examples
   # res = http.read_response
-  def read_response(args = {})
-    ::Http2::ResponseReader.new(http2: self, sock: @sock, args: args).response
+  def read_response(request, args = {})
+    ::Http2::ResponseReader.new(http2: self, sock: @sock, args: args, request: request).response
   end
 
   def to_s
