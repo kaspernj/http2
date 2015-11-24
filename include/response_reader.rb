@@ -105,7 +105,9 @@ private
     url << "?#{uri.query}" if uri.query.to_s.length > 0
     url = url.gsub(/\A\//, "")
 
-    args = @http2.args.merge(host: uri.host)
+    args = @http2.args
+           .except(:port)
+           .merge(host: uri.host)
     args[:ssl] = true if uri.scheme == "https"
     args[:port] = uri.port if uri.port
 
