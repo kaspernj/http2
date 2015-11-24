@@ -106,7 +106,7 @@ private
     url = url.gsub(/\A\//, "")
 
     args = @http2.args
-           .except(:port)
+           .except(:ssl, :port)
            .merge(host: uri.host)
     args[:ssl] = true if uri.scheme == "https"
     args[:port] = uri.port if uri.port
