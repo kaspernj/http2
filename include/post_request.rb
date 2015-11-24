@@ -26,7 +26,6 @@ class Http2::PostRequest
 
     @http2.mutex.synchronize do
       puts "Http2: Doing post." if @debug
-      puts "Http2: Header str: #{header_string}" if @debug
 
       @conn.write(headers_string)
       return @http2.read_response(self, @args)

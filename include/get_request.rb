@@ -5,7 +5,6 @@ class Http2::GetRequest
 
   def execute
     @http2.mutex.synchronize do
-      puts "Http2: Writing headers: #{headers_string}" if @debug
       @http2.connection.write(headers_string)
 
       puts "Http2: Reading response." if @debug
