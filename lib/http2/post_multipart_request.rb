@@ -1,18 +1,18 @@
 require "tempfile"
 
-class Http2::PostMultipartRequest
+class Http2::PostMultipartRequest < Http2::BaseRequest
   attr_reader :headers_string
 
   def initialize(http2, *args)
-    @http2, @nl, @args = http2, http2.nl, http2.parse_args(*args)
+    super
+
     @phash = @args[:post].clone
     @http2.autostate_set_on_post_hash(phash) if @http2.autostate
     @boundary = rand(36**50).to_s(36)
-    @conn = @http2.connection
   end
 
   def execute
-    generate_raw(@phash) do |helper, praw|
+    generate_raw(@phash) do |_helper, praw|
       @http2.mutex.synchronize do
         @conn.write(header_string_with_raw_post(praw))
 
@@ -30,10 +30,13 @@ private
 
   def header_string_with_raw_post(praw)
     @headers_string = "POST /#{@args[:url]} HTTP/1.1#{@nl}"
-    @headers_string << @http2.header_str(@http2.default_headers(@args).merge(
+
+    headers = @http2.default_headers(@args).merge(
       "Content-Type" => "multipart/form-data; boundary=#{@boundary}",
       "Content-Length" => praw.size
-    ), @args)
+    )
+
+    @headers_string << @http2.header_str(headers)
     @headers_string << @nl
     @headers_string
   end
@@ -54,10 +57,12 @@ private
   def read_file(path, praw)
     File.open(path, "r") do |fp|
       begin
-        while data = fp.sysread(4096)
+        while (data = fp.sysread(4096))
           praw << data
         end
+      # rubocop:disable Lint/HandleExceptions
       rescue EOFError
+        # rubocop:enable Lint/HandleExceptions
         # Happens when done.
       end
     end

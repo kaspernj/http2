@@ -1,4 +1,4 @@
-#This class holds various classes for error-handeling.
+# This class holds various classes for error-handeling.
 class Http2::Errors
   class Http2error < RuntimeError
     attr_accessor :response

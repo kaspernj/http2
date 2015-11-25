@@ -2,7 +2,10 @@ class Http2::Cookie
   attr_reader :name, :value, :path, :expires_raw
 
   def initialize(args)
-    @name, @value, @path, @expires_raw = args[:name], args[:value], args[:path], args[:expires]
+    @name = args[:name]
+    @value = args[:value]
+    @path = args[:path]
+    @expires_raw = args[:expires]
   end
 
   def inspect

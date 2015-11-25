@@ -1,19 +1,8 @@
-class Http2::PostRequest
-  VALID_ARGUMENTS_POST = [:post, :url, :default_headers, :headers, :json, :method, :cookies, :on_content, :content_type]
-
-  def initialize(http2, args)
-    args.each do |key, val|
-      raise "Invalid key: '#{key}'." unless VALID_ARGUMENTS_POST.include?(key)
-    end
-
-    @http2, @args, @debug, @nl = http2, http2.parse_args(args), http2.debug, http2.nl
-    @conn = @http2.connection
-  end
-
+class Http2::PostRequest < Http2::BaseRequest
   def headers_string
     unless @headers_string
       @headers_string = "#{method} /#{@args[:url]} HTTP/1.1#{@nl}"
-      @headers_string << @http2.header_str(headers, @args)
+      @headers_string << @http2.header_str(headers)
       @headers_string << @nl
       @headers_string << @data
     end
@@ -46,7 +35,7 @@ private
     if @args[:content_type]
       @args[:content_type]
     elsif @args[:json]
-      content_type = "application/json"
+      "application/json"
     else
       "application/x-www-form-urlencoded"
     end
@@ -73,11 +62,9 @@ private
     headers_hash.merge! @http2.default_headers(@args)
 
     unless headers_hash["Accept"]
-      if @args[:json]
-        headers_hash["Accept"] = "application/json"
-      end
+      headers_hash["Accept"] = "application/json" if @args[:json]
     end
 
-    return headers_hash
+    headers_hash
   end
 end

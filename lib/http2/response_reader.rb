@@ -6,7 +6,10 @@ class Http2::ResponseReader
     @transfer_encoding = nil
     @response = Http2::Response.new(request: args.fetch(:request), request_args: args, debug: @debug)
     @rec_count = 0
-    @args, @debug, @http2, @sock = args[:args], args[:http2].debug, args[:http2], args[:sock]
+    @args = args[:args]
+    @debug = args[:http2].debug
+    @http2 = args[:http2]
+    @sock = args[:sock]
     @nl = @http2.nl
     @conn = @http2.connection
 
@@ -49,7 +52,7 @@ class Http2::ResponseReader
   end
 
   def finish
-    #Check if we should reconnect based on keep-alive-max.
+    # Check if we should reconnect based on keep-alive-max.
     if @keepalive_max == 1 || @connection == "close"
       @conn.close unless @conn.closed?
     end
@@ -66,7 +69,7 @@ class Http2::ResponseReader
     @http2.autostate_register(@response) if @http2.args[:autostate]
     handle_errors
 
-    if response = check_and_follow_redirect
+    if (response = check_and_follow_redirect)
       @response = response
     end
   end
@@ -106,12 +109,13 @@ private
     url = url.gsub(/\A\//, "")
 
     args = @http2.args
-           .reject { |k, v| [:ssl, :port].include? k }
-           .merge(host: uri.host)
+      .reject { |k, _v| [:ssl, :port].include? k }
+      .merge(host: uri.host)
+
     args[:ssl] = true if uri.scheme == "https"
     args[:port] = uri.port if uri.port
 
-    return [url, args]
+    [url, args]
   end
 
   def check_and_decode
@@ -127,7 +131,7 @@ private
       begin
         valid_string = ic.encode("UTF-8")
       rescue
-        valid_string = untrusted_str.force_encoding("UTF-8").encode("UTF-8", :invalid => :replace, :replace => "").encode("UTF-8")
+        valid_string = untrusted_str.force_encoding("UTF-8").encode("UTF-8", invalid: :replace, replace: "").encode("UTF-8")
       end
 
       @response.body = valid_string
@@ -135,7 +139,7 @@ private
   end
 
   def handle_errors
-    return unless  @http2.raise_errors
+    return unless @http2.raise_errors
 
     if @response.code == "500"
       err = Http2::Errors::Internalserver.new("A internal server error occurred")
@@ -180,7 +184,7 @@ private
   end
 
   def parse_content_type(content_type_line)
-    if match_charset = content_type_line.match(/\s*;\s*charset=(.+)/i)
+    if (match_charset = content_type_line.match(/\s*;\s*charset=(.+)/i))
       @charset = match_charset[1].downcase
       @response.charset = @charset
       content_type_line.gsub!(match_charset[0], "")
@@ -189,15 +193,15 @@ private
     @response.content_type = content_type_line
   end
 
-  #Parse a header-line and saves it on the object.
+  # Parse a header-line and saves it on the object.
   #===Examples
   # http.parse_header("Content-Type: text/html\r\n")
   def parse_header(line)
-    if match = line.match(/^(.+?):\s*(.+)#{@nl}$/)
+    if (match = line.match(/^(.+?):\s*(.+)#{@nl}$/))
       key = match[1].downcase
       set_header_special_values(key, match[2])
       parse_normal_header(line, key, match[1], match[2])
-    elsif match = line.match(/^HTTP\/([\d\.]+)\s+(\d+)\s+(.+)$/)
+    elsif (match = line.match(/^HTTP\/([\d\.]+)\s+(\d+)\s+(.+)$/))
       @response.code = match[2]
       @response.http_version = match[1]
       @http2.on_content_call(@args, line)
@@ -233,7 +237,7 @@ private
     end
   end
 
-  #Parses the body based on given headers and saves it to the result-object.
+  # Parses the body based on given headers and saves it to the result-object.
   # http.parse_body(str)
   def parse_body(line)
     return :break if @length == 0

@@ -1,7 +1,7 @@
 class Http2::UrlBuilder
   attr_accessor :host, :port, :protocol, :path, :params
 
-  def initialize args = {}
+  def initialize
     @params = {}
   end
 
@@ -24,7 +24,7 @@ class Http2::UrlBuilder
       end
     end
 
-    return url_params
+    url_params
   end
 
   def build_path_and_params
@@ -35,7 +35,7 @@ class Http2::UrlBuilder
       url << build_params
     end
 
-    return url
+    url
   end
 
   def build
@@ -49,7 +49,7 @@ class Http2::UrlBuilder
 
     url << build_path_and_params
 
-    return url
+    url
   end
 
   def params?

@@ -1,8 +1,4 @@
-class Http2::GetRequest
-  def initialize(http2, args)
-    @http2, @args, @debug, @nl = http2, http2.parse_args(args), http2.debug, http2.nl
-  end
-
+class Http2::GetRequest < Http2::BaseRequest
   def execute
     @http2.mutex.synchronize do
       @http2.connection.write(headers_string)
@@ -18,7 +14,7 @@ class Http2::GetRequest
   def headers_string
     unless @header_str
       @header_str = "#{method} /#{@args[:url]} HTTP/1.1#{@nl}"
-      @header_str << @http2.header_str(@http2.default_headers(@args), @args)
+      @header_str << @http2.header_str(@http2.default_headers(@args))
       @header_str << @nl
     end
 
