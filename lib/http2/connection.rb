@@ -46,6 +46,8 @@ class Http2::Connection
   def write(str)
     reconnect unless socket_working?
 
+    puts "Http2: Writing: #{str}" if @debug
+
     begin
       raise Errno::EPIPE, "The socket is closed." if !@sock || @sock.closed?
       sock_write(str)
