@@ -17,7 +17,7 @@ require "string-cases"
 class Http2
   # Autoloader for subclasses.
   def self.const_missing(name)
-    require "#{File.dirname(__FILE__)}/../include/#{::StringCases.camel_to_snake(name)}.rb"
+    require "#{File.dirname(__FILE__)}/http2/#{::StringCases.camel_to_snake(name)}.rb"
     return Http2.const_get(name)
   end
 
