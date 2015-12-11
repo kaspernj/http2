@@ -2,17 +2,17 @@
 class Http2::Utils
   # URL-encodes a string.
   def self.urlenc(string)
-    #Thanks to CGI framework
+    # Thanks to CGI framework
     string.to_s.gsub(/([^ a-zA-Z0-9_.-]+)/) do
-      '%' + $1.unpack('H2' * $1.bytesize).join('%').upcase
-    end.tr(' ', '+')
+      "%" + $1.unpack("H2" * $1.bytesize).join("%").upcase
+    end.tr(" ", "+")
   end
 
   # URL-decodes a string.
   def self.urldec(string)
-    #Thanks to CGI framework
-    str = string.to_s.tr('+', ' ').gsub(/((?:%[0-9a-fA-F]{2})+)/) do
-      [$1.delete('%')].pack('H*')
+    # Thanks to CGI framework
+    string.to_s.tr("+", " ").gsub(/((?:%[0-9a-fA-F]{2})+)/) do
+      [$1.delete("%")].pack("H*")
     end
   end
 
@@ -28,10 +28,10 @@ class Http2::Utils
 
     cookie_data = {
       name: urldec(match[1].to_s),
-      value: self.urldec(match[2].to_s)
+      value: urldec(match[2].to_s)
     }
 
-    while match = str.match(/(.+?)=(.*?)(;\s*|$)/)
+    while (match = str.match(/(.+?)=(.*?)(;\s*|$)/))
       str = str.gsub(match[0], "")
       key = match[1].to_s.downcase
       value = match[2].to_s
@@ -45,6 +45,6 @@ class Http2::Utils
 
     cookie = Http2::Cookie.new(cookie_data)
 
-    return [cookie]
+    [cookie]
   end
 end

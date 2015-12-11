@@ -11,7 +11,7 @@ describe Http2::UrlBuilder do
       ub.params["test"] = "true"
       ub.params["test2"] = "false"
 
-      ub.build.should eq "https://www.github.com:443/index.php?test=true&test2=false"
+      expect(ub.build).to eq "https://www.github.com:443/index.php?test=true&test2=false"
     end
   end
 end

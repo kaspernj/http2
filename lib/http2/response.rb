@@ -1,10 +1,10 @@
-#This object will be returned as the response for each request.
+# This object will be returned as the response for each request.
 class Http2::Response
-  #All the data the response contains. Headers, body, cookies, requested URL and more.
+  # All the data the response contains. Headers, body, cookies, requested URL and more.
   attr_reader :args, :request
   attr_accessor :body, :charset, :code, :content_type, :http_version
 
-  #This method should not be called manually.
+  # This method should not be called manually.
   def initialize(args = {})
     @args = args
     @args[:headers] ||= {}
@@ -13,27 +13,27 @@ class Http2::Response
     @request = args.fetch(:request)
   end
 
-  #Returns headers given from the host for the result.
+  # Returns headers given from the host for the result.
   #===Examples
   # headers_hash = res.headers
   def headers
-    return @args.fetch(:headers)
+    @args.fetch(:headers)
   end
 
-  #Returns a certain header by name or false if not found.
+  # Returns a certain header by name or false if not found.
   #===Examples
   # val = res.header("content-type")
   def header(key)
     return false unless @args.fetch(:headers).key?(key)
-    return @args.fetch(:headers).fetch(key).first.to_s
+    @args.fetch(:headers).fetch(key).first.to_s
   end
 
-  #Returns true if a header of the given string exists.
+  # Returns true if a header of the given string exists.
   #===Examples
   # print "No content-type was given." if !http.header?("content-type")
   def header?(key)
     return true if @args[:headers].key?(key) && @args[:headers][key].first.to_s.length > 0
-    return false
+    false
   end
 
   def content_length
@@ -54,12 +54,12 @@ class Http2::Response
     end
   end
 
-  #Returns the requested URL as a string.
+  # Returns the requested URL as a string.
   #===Examples
   # res.requested_url #=> "?show=status&action=getstatus"
   def requested_url
     raise "URL could not be detected." unless @args[:request_args][:url]
-    return @args[:request_args][:url]
+    @args[:request_args][:url]
   end
 
   # Checks the data that has been sat on the object and raises various exceptions, if it does not validate somehow.
@@ -75,6 +75,30 @@ class Http2::Response
 
   def json
     @json ||= JSON.parse(body)
+  end
+
+  def host
+    @request.http2.host
+  end
+
+  def port
+    @request.http2.port
+  end
+
+  def ssl?
+    @request.http2.ssl?
+  end
+
+  def path
+    @request.path
+  end
+
+  def to_s
+    "#<Http::Response host=\"#{host}\" port=#{port} ssl=#{ssl?} path=\"#{path}\">"
+  end
+
+  def inspect
+    to_s
   end
 
 private

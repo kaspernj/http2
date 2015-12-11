@@ -1,6 +1,9 @@
 class Http2::Connection
   def initialize(http2)
-    @http2, @debug, @args, @nl = http2, http2.debug, http2.args, http2.nl
+    @http2 = http2
+    @debug = http2.debug
+    @args = http2.args
+    @nl = http2.nl
     reconnect
   end
 
@@ -21,10 +24,6 @@ class Http2::Connection
 
   def read(length)
     @sock.read(length)
-  end
-
-  def close
-    @sock.close
   end
 
   def closed?
@@ -51,7 +50,7 @@ class Http2::Connection
     begin
       raise Errno::EPIPE, "The socket is closed." if !@sock || @sock.closed?
       sock_write(str)
-    rescue Errno::EPIPE #this can also be thrown by puts.
+    rescue Errno::EPIPE # this can also be thrown by puts.
       reconnect
       sock_write(str)
     end
@@ -63,7 +62,7 @@ class Http2::Connection
   def reconnect
     puts "Http2: Reconnect." if @debug
 
-    #Open connection.
+    # Open connection.
     if @args[:proxy]
       if @args[:proxy][:connect]
         connect_proxy_connect
@@ -86,7 +85,7 @@ class Http2::Connection
   #===Examples
   # puts "Socket is working." if http.socket_working?
   def socket_working?
-    return false if !@sock or @sock.closed?
+    return false if !@sock || @sock.closed?
 
     if @keepalive_timeout && @request_last
       between = Time.now.to_i - @request_last.to_i
@@ -96,7 +95,7 @@ class Http2::Connection
       end
     end
 
-    return true
+    true
   end
 
   # Closes the current connection if any.

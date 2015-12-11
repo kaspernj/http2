@@ -3,40 +3,43 @@ require "json"
 
 describe "Http2" do
   it "should be able to do normal post-requests." do
-    #Test posting keep-alive and advanced post-data.
+    # Test posting keep-alive and advanced post-data.
     with_http do |http|
       0.upto(5) do
-        resp = http.get("multipart_test.rhtml")
+        http.get("multipart_test.rhtml")
 
-        resp = http.post(url: "multipart_test.rhtml?choice=post-test", post: {
-          "val1" => "test1",
-          "val2" => "test2",
-          "val3" => [
-            "test3"
-          ],
-          "val4" => {
-            "val5" => "test5"
-          },
-          "val6" => {
-            "val7" => [
-              {
-                "val8" => "test8"
-              }
-            ]
-          },
-          "val9" => ["a", "b", "d"]
-        })
+        resp = http.post(
+          url: "multipart_test.rhtml?choice=post-test",
+          post: {
+            "val1" => "test1",
+            "val2" => "test2",
+            "val3" => [
+              "test3"
+            ],
+            "val4" => {
+              "val5" => "test5"
+            },
+            "val6" => {
+              "val7" => [
+                {
+                  "val8" => "test8"
+                }
+              ]
+            },
+            "val9" => ["a", "b", "d"]
+          }
+        )
         res = JSON.parse(resp.body)
 
-        res.is_a?(Hash).should eq true
-        res["val1"].should eq "test1"
-        res["val2"].should eq "test2"
-        res["val3"]["0"].should eq "test3"
-        res["val4"]["val5"].should eq "test5"
-        res["val6"]["val7"]["0"]["val8"].should eq "test8"
-        res["val9"]["0"].should eq "a"
-        res["val9"]["1"].should eq "b"
-        res["val9"]["2"].should eq "d"
+        expect(res.is_a?(Hash)).to eq true
+        expect(res["val1"]).to eq "test1"
+        expect(res["val2"]).to eq "test2"
+        expect(res["val3"]["0"]).to eq "test3"
+        expect(res["val4"]["val5"]).to eq "test5"
+        expect(res["val6"]["val7"]["0"]["val8"]).to eq "test8"
+        expect(res["val9"]["0"]).to eq "a"
+        expect(res["val9"]["1"]).to eq "b"
+        expect(res["val9"]["2"]).to eq "d"
       end
     end
   end
@@ -47,7 +50,7 @@ describe "Http2" do
       http.reconnect
       resp2 = http.get("multipart_test.rhtml")
 
-      resp1.body.should eq resp2.body
+      expect(resp1.body).to eq resp2.body
     end
   end
 
@@ -57,23 +60,26 @@ describe "Http2" do
         fpath = File.realpath(__FILE__)
         fpath2 = "#{File.realpath(File.dirname(__FILE__))}/../lib/http2.rb"
 
-        resp = http.post_multipart(url: "multipart_test.rhtml", post: {
-          "test_var" => "true",
-          "test_file1" => {
-            fpath: fpath,
-            filename: "specfile"
-          },
-          "test_file2" => {
-            fpath: fpath2,
-            filename: "http2.rb"
+        resp = http.post_multipart(
+          url: "multipart_test.rhtml",
+          post: {
+            "test_var" => "true",
+            "test_file1" => {
+              fpath: fpath,
+              filename: "specfile"
+            },
+            "test_file2" => {
+              fpath: fpath2,
+              filename: "http2.rb"
+            }
           }
-        })
+        )
 
         data = JSON.parse(resp.body)
 
-        data["post"]["test_var"].should eq "true"
-        data["files_data"]["test_file1"].should eq File.read(fpath)
-        data["files_data"]["test_file2"].should eq File.read(fpath2)
+        expect(data["post"]["test_var"]).to eq "true"
+        expect(data["files_data"]["test_file1"]).to eq File.read(fpath)
+        expect(data["files_data"]["test_file2"]).to eq File.read(fpath2)
       end
     end
   end
@@ -85,25 +91,23 @@ describe "Http2" do
     ]
 
     with_http do |http|
-      0.upto(105) do |count|
+      0.upto(105) do |_count|
         url = urls[rand(urls.size)]
-        #print "Doing request #{count} of 200 (#{url}).\n"
+        # puts "Doing request #{count} of 200 (#{url})."
         res = http.get(url)
-        res.body.to_s.length.should > 0
+        expect(res.body.to_s.length).to be > 0
       end
     end
   end
 
   it "should be able to convert URL's to 'is.gd'-short-urls" do
     isgd = Http2.isgdlink("https://github.com/kaspernj/http2")
-    raise "Expected isgd-var to be valid but it wasnt: '#{isgd}'." if !isgd.match(/^http:\/\/is\.gd\/([A-z\d]+)$/)
+    raise "Expected isgd-var to be valid but it wasnt: '#{isgd}'." unless isgd.match(/^http:\/\/is\.gd\/([A-z\d]+)$/)
   end
 
   it "should raise exception when something is not found" do
     with_http do |http|
-      expect{
-        http.get("something_that_does_not_exist.rhtml")
-      }.to raise_error(::Http2::Errors::Notfound)
+      expect { http.get("something_that_does_not_exist.rhtml") }.to raise_error(::Http2::Errors::Notfound)
     end
   end
 
@@ -115,15 +119,15 @@ describe "Http2" do
       )
 
       data = JSON.parse(res.body)
-      data["_SERVER"]["HTTP_CONTENT_TYPE"].should eq "application/json"
+      expect(data["_SERVER"]["HTTP_CONTENT_TYPE"]).to eq "application/json"
 
       # Hack JSON data from Hayabusa.
       json_data = JSON.parse(data["_POST"].keys.first)
-      json_data["testkey"].should eq "testvalue"
+      expect(json_data["testkey"]).to eq "testvalue"
 
-      res.content_type.should eq "application/json"
-      res.json?.should eq true
-      res.json["_SERVER"]["REQUEST_METHOD"].should eq "POST"
+      expect(res.content_type).to eq "application/json"
+      expect(res.json?).to eq true
+      expect(res.json["_SERVER"]["REQUEST_METHOD"]).to eq "POST"
     end
   end
 
@@ -136,25 +140,25 @@ describe "Http2" do
       )
 
       data = JSON.parse(res.body)
-      data["_SERVER"]["HTTP_CONTENT_TYPE"].should eq "plain/text"
+      expect(data["_SERVER"]["HTTP_CONTENT_TYPE"]).to eq "plain/text"
 
       raw_data = data["_POST"].keys.first
-      raw_data.should eq "test1_test2_test3"
+      expect(raw_data).to eq "test1_test2_test3"
     end
   end
 
   it "should set various timeouts" do
     with_http do |http|
-      res = http.get("content_type_test.rhtml")
-      http.keepalive_timeout.should eq 15
-      http.keepalive_max.should eq 30
+      http.get("content_type_test.rhtml")
+      expect(http.keepalive_timeout).to eq 15
+      expect(http.keepalive_max).to eq 30
     end
   end
 
   it "should follow redirects" do
     with_http(follow_redirects: true) do |http|
       resp = http.get("redirect_test.rhtml")
-      resp.code.should eq "200"
+      expect(resp.code).to eq "200"
     end
   end
 end

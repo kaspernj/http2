@@ -3,7 +3,7 @@ require "uri"
 require "monitor" unless ::Kernel.const_defined?(:Monitor)
 require "string-cases"
 
-#This class tries to emulate a browser in Ruby without any visual stuff. Remember cookies, keep sessions alive, reset connections according to keep-alive rules and more.
+# This class tries to emulate a browser in Ruby without any visual stuff. Remember cookies, keep sessions alive, reset connections according to keep-alive rules and more.
 #===Examples
 # Http2.new(host: "www.somedomain.com", port: 80, ssl: false, debug: false) do |http|
 #  res = http.get("index.rhtml?show=some_page")
@@ -18,7 +18,7 @@ class Http2
   # Autoloader for subclasses.
   def self.const_missing(name)
     require "#{File.dirname(__FILE__)}/http2/#{::StringCases.camel_to_snake(name)}.rb"
-    return Http2.const_get(name)
+    Http2.const_get(name)
   end
 
   # Converts a URL to "is.gd"-short-URL.
@@ -45,17 +45,21 @@ class Http2
       begin
         yield(self)
       ensure
-        self.destroy
+        destroy
       end
     end
   end
 
   def host
-    @args[:host]
+    @args.fetch(:host)
   end
 
   def port
-    @args[:port]
+    @args.fetch(:port)
+  end
+
+  def ssl?
+    @args[:ssl] ? true : false
   end
 
   def reconnect
@@ -68,7 +72,7 @@ class Http2
     builder.port = port
     builder.protocol = @args[:protocol]
 
-    return builder
+    builder
   end
 
   # Closes current connection if any, changes the arguments on the object and reconnects keeping all cookies and other stuff intact.
@@ -104,9 +108,9 @@ class Http2
       raise "Invalid arguments: '#{args.class.name}'"
     end
 
-    raise "Invalid URL: '#{args[:url]}'" unless args[:url].to_s.split("\n").length == 1
+    raise "Invalid URL: '#{args[:url]}'" if args[:url] != "" && args[:url].to_s.split("\n").length != 1
 
-    return args
+    args
   end
 
   # Returns a result-object based on the arguments.
@@ -154,7 +158,7 @@ class Http2
 
     headers.merge!(@args[:extra_headers]) if @args[:extra_headers]
     headers.merge!(args[:headers]) if args[:headers]
-    return headers
+    headers
   end
 
   # Posts to a certain page.
@@ -172,7 +176,7 @@ class Http2
   end
 
   # Returns a header-string which normally would be used for a request in the given state.
-  def header_str(headers_hash, args = {})
+  def header_str(headers_hash)
     headers_hash["Cookie"] = cookie_header_string
 
     headers_str = ""
@@ -180,21 +184,21 @@ class Http2
       headers_str << "#{key}: #{val}#{@nl}"
     end
 
-    return headers_str
+    headers_str
   end
 
   def cookie_header_string
     cstr = ""
 
     first = true
-    @cookies.each do |cookie_name, cookie|
+    @cookies.each do |_cookie_name, cookie|
       cstr << "; " unless first
       first = false if first
       ensure_single_lines([cookie.name, cookie.value])
       cstr << "#{Http2::Utils.urlenc(cookie.name)}=#{Http2::Utils.urlenc(cookie.value)}"
     end
 
-    return cstr
+    cstr
   end
 
   def cookie(name)
@@ -231,13 +235,13 @@ class Http2
 private
 
   def host_header
-    #Possible to give custom host-argument.
+    # Possible to give custom host-argument.
     host = args[:host] || self.host
     port = args[:port] || self.port
 
     host_header_string = "#{host}" # Copy host string to avoid changing the original string if port has been given!
     host_header_string << ":#{port}" if port && ![80, 443].include?(port.to_i) && !@args[:skip_port_in_host_header]
-    return host_header_string
+    host_header_string
   end
 
   # Registers the states from a result.
@@ -247,7 +251,6 @@ private
 
     res.body.to_s.scan(/<input type="hidden" name="__(EVENTTARGET|EVENTARGUMENT|VIEWSTATE|LASTFOCUS)" id="(.*?)" value="(.*?)" \/>/) do |match|
       name = "__#{match[0]}"
-      id = match[1]
       value = match[2]
 
       puts "Http2: Registered autostate-value with name '#{name}' and value '#{value}'." if @debug
@@ -266,14 +269,14 @@ private
     args = {host: args} if args.is_a?(String)
     raise "Arguments wasnt a hash." unless args.is_a?(Hash)
 
-    args.each do |key, val|
+    args.each do |key, _val|
       raise "Invalid key: '#{key}'." unless VALID_ARGUMENTS_INITIALIZE.include?(key)
     end
 
     args[:proxy][:connect] = true if args[:proxy] && !args[:proxy].key?(:connect) && args[:ssl]
 
     raise "No host was given." unless args[:host]
-    return args
+    args
   end
 
   def set_default_values
@@ -281,7 +284,7 @@ private
     @autostate_values = {} if autostate
     @nl = @args[:nl] || "\r\n"
 
-    if !@args[:port]
+    unless @args[:port]
       if @args[:ssl]
         @args[:port] = 443
       else

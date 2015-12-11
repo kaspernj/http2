@@ -5,14 +5,14 @@ describe Http2 do
 
   it "should parse cookies and let them be read" do
     with_http do |http|
-      res = http.get("cookie_test.rhtml")
-      http.cookies.length.should eq 2
+      http.get("cookie_test.rhtml")
+      expect(http.cookies.length).to eq 2
 
       cookie = http.cookie("TestCookie")
-      cookie.name.should eq "TestCookie"
-      cookie.value.should eq "TestValue"
-      cookie.path.should eq "/"
-      cookie.expires.should > Time.now
+      expect(cookie.name).to eq "TestCookie"
+      expect(cookie.value).to eq "TestValue"
+      expect(cookie.path).to eq "/"
+      expect(cookie.expires).to be > Time.now
     end
   end
 end

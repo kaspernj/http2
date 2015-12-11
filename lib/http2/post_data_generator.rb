@@ -1,6 +1,7 @@
 class Http2::PostDataGenerator
   def initialize(pdata, args = {})
-    @pdata, @args = pdata, args
+    @pdata = pdata
+    @args = args
   end
 
   def generate
@@ -14,7 +15,7 @@ class Http2::PostDataGenerator
       return @pdata.to_s
     end
 
-    return praw
+    praw
   end
 
 private
@@ -22,7 +23,7 @@ private
   def generate_for_hash(hash)
     praw = ""
 
-    @pdata.each do |key, val|
+    hash.each do |key, val|
       praw << "&" if praw != ""
       key = "#{@args[:orig_key]}[#{key}]" if @args[:orig_key]
       praw << generate_key_value(key, val)
@@ -35,7 +36,7 @@ private
     praw = ""
 
     count = 0
-    @pdata.each do |val|
+    array.each do |val|
       praw << "&" if praw != ""
 
       if @args[:orig_key]

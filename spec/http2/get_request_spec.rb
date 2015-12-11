@@ -5,7 +5,7 @@ describe Http2::GetRequest do
     with_http do |http|
       res = http.get("content_type_test.rhtml")
       headers = res.request.headers_string
-      headers.should include "GET /content_type_test.rhtml"
+      expect(headers).to include "GET /content_type_test.rhtml"
     end
   end
 end
