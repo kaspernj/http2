@@ -1,6 +1,6 @@
-[![Build Status](https://img.shields.io/shippable/540e7b9b3479c5ea8f9ec21d.svg)](https://app.shippable.com/projects/540e7b9b3479c5ea8f9ec21d/builds/latest)
 [![Code Climate](https://codeclimate.com/github/kaspernj/http2.png)](https://codeclimate.com/github/kaspernj/http2)
 [![Code Climate](https://codeclimate.com/github/kaspernj/http2/coverage.png)](https://codeclimate.com/github/kaspernj/http2)
+[![Build Status](https://img.shields.io/shippable/540e7b9b3479c5ea8f9ec21d.svg)](https://app.shippable.com/projects/540e7b9b3479c5ea8f9ec21d/builds/latest)
 
 # http2
 
