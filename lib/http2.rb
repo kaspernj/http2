@@ -17,8 +17,14 @@ require "string-cases"
 class Http2
   # Autoloader for subclasses.
   def self.const_missing(name)
-    require "#{File.dirname(__FILE__)}/http2/#{::StringCases.camel_to_snake(name)}.rb"
-    Http2.const_get(name)
+    file_path = "#{File.dirname(__FILE__)}/http2/#{::StringCases.camel_to_snake(name)}.rb"
+
+    if File.exists?(file_path)
+      require file_path
+      return Http2.const_get(name) if Http2.const_defined?(name)
+    end
+
+    super
   end
 
   # Converts a URL to "is.gd"-short-URL.
@@ -147,17 +153,18 @@ class Http2
 
     if @args[:basic_auth]
       require "base64" unless ::Kernel.const_defined?(:Base64)
-      headers["Authorization"] = "Basic #{Base64.encode64("#{@args[:basic_auth][:user]}:#{@args[:basic_auth][:passwd]}").strip}"
+      headers["Authorization"] = "Basic #{Base64.strict_encode64("#{@args[:basic_auth][:user]}:#{@args[:basic_auth][:passwd]}").strip}"
     end
 
     if @args[:proxy] && @args[:proxy][:user] && @args[:proxy][:passwd] && !@connection.proxy_connect?
       require "base64" unless ::Kernel.const_defined?(:Base64)
       puts "Http2: Adding proxy auth header to request" if @debug
-      headers["Proxy-Authorization"] = "Basic #{Base64.encode64("#{@args[:proxy][:user]}:#{@args[:proxy][:passwd]}").strip}"
+      headers["Proxy-Authorization"] = "Basic #{Base64.strict_encode64("#{@args[:proxy][:user]}:#{@args[:proxy][:passwd]}").strip}"
     end
 
     headers.merge!(@args[:extra_headers]) if @args[:extra_headers]
     headers.merge!(args[:headers]) if args[:headers]
+
     headers
   end
 
@@ -177,7 +184,7 @@ class Http2
 
   # Returns a header-string which normally would be used for a request in the given state.
   def header_str(headers_hash)
-    headers_hash["Cookie"] = cookie_header_string
+    headers_hash["Cookie"] = cookie_header_string unless cookie_header_string.empty?
 
     headers_str = ""
     headers_hash.each do |key, val|
