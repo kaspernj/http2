@@ -161,4 +161,12 @@ describe "Http2" do
       expect(resp.code).to eq "200"
     end
   end
+
+  it "throws errors on unauhtorized" do
+    with_http do |http|
+      expect do
+        http.get("unauthorized.rhtml")
+      end.to raise_error(Http2::Errors::Unauthorized)
+    end
+  end
 end

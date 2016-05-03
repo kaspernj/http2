@@ -147,6 +147,8 @@ private
       err = Http2::Errors::Noaccess.new("No access")
     elsif @response.code == "400"
       err = Http2::Errors::Badrequest.new("Bad request")
+    elsif @response.code == "401"
+      err = Http2::Errors::Unauthorized.new("Unauthorized")
     elsif @response.code == "404"
       err = Http2::Errors::Notfound.new("Not found")
     end
