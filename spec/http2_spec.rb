@@ -169,4 +169,12 @@ describe "Http2" do
       end.to raise_error(Http2::Errors::Unauthorized)
     end
   end
+
+  it "throws errors on unsupported media type" do
+    with_http do |http|
+      expect do
+        http.get("unsupported_media_type.rhtml")
+      end.to raise_error(Http2::Errors::UnsupportedMediaType)
+    end
+  end
 end

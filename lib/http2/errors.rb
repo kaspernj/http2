@@ -9,4 +9,5 @@ class Http2::Errors
   class Notfound < Http2error; end
   class Badrequest < Http2error; end
   class Unauthorized < Http2error; end
+  class UnsupportedMediaType < Http2error; end
 end

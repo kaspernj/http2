@@ -141,16 +141,19 @@ private
   def handle_errors
     return unless @http2.raise_errors
 
-    if @response.code == "500"
+    case @response.code
+    when "500"
       err = Http2::Errors::Internalserver.new("A internal server error occurred")
-    elsif @response.code == "403"
+    when "403"
       err = Http2::Errors::Noaccess.new("No access")
-    elsif @response.code == "400"
+    when "400"
       err = Http2::Errors::Badrequest.new("Bad request")
-    elsif @response.code == "401"
+    when "401"
       err = Http2::Errors::Unauthorized.new("Unauthorized")
-    elsif @response.code == "404"
+    when "404"
       err = Http2::Errors::Notfound.new("Not found")
+    when "415"
+      err = Http2::Errors::UnsupportedMediaType.new("Unsupported media type")
     end
 
     if err
