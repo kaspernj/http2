@@ -27,14 +27,6 @@ class Http2
     super
   end
 
-  # Converts a URL to "is.gd"-short-URL.
-  def self.isgdlink(url)
-    Http2.new(host: "is.gd") do |http|
-      resp = http.get("api.php?longurl=#{url}")
-      return resp.body
-    end
-  end
-
   attr_reader :autostate, :connection, :cookies, :args, :debug, :mutex, :resp, :raise_errors, :nl
   attr_accessor :keepalive_max, :keepalive_timeout
 

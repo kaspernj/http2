@@ -1,15 +1,16 @@
 class Http2::ResponseReader
   attr_reader :response
 
-  def initialize(args)
+  def initialize(args:, http2:, sock:, request:)
     @mode = "headers"
     @transfer_encoding = nil
-    @response = Http2::Response.new(request: args.fetch(:request), request_args: args, debug: @debug)
+    @request = request
+    @response = Http2::Response.new(debug: http2.debug, request: request)
     @rec_count = 0
-    @args = args[:args]
-    @debug = args[:http2].debug
-    @http2 = args[:http2]
-    @sock = args[:sock]
+    @args = args
+    @debug = http2.debug
+    @http2 = http2
+    @sock = sock
     @nl = @http2.nl
     @conn = @http2.connection
 
@@ -90,7 +91,7 @@ private
 
   REDIRECT_CODES = [302, 303, 307]
   def redirect_response?
-    REDIRECT_CODES.include?(@response.code.to_i) && @response.header?("location") && @http2.args[:follow_redirects]
+    REDIRECT_CODES.include?(response.code.to_i) && response.header?("location") && @http2.args[:follow_redirects]
   end
 
   def redirect_using_same_connection?(args)
@@ -101,8 +102,12 @@ private
     end
   end
 
+  def url
+    @url ||= response.header("location")
+  end
+
   def url_and_args_from_location
-    uri = URI.parse(@response.header("location"))
+    uri = URI.parse(url)
 
     url = uri.path
     url << "?#{uri.query}" if uri.query.to_s.length > 0

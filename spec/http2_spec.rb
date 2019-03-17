@@ -100,11 +100,6 @@ describe "Http2" do
     end
   end
 
-  it "should be able to convert URL's to 'is.gd'-short-urls" do
-    isgd = Http2.isgdlink("https://github.com/kaspernj/http2")
-    raise "Expected isgd-var to be valid but it wasnt: '#{isgd}'." unless isgd.match(/^http:\/\/is\.gd\/([A-z\d]+)$/)
-  end
-
   it "should raise exception when something is not found" do
     with_http do |http|
       expect { http.get("something_that_does_not_exist.rhtml") }.to raise_error(::Http2::Errors::Notfound)

@@ -1,38 +1,30 @@
 # This object will be returned as the response for each request.
 class Http2::Response
   # All the data the response contains. Headers, body, cookies, requested URL and more.
-  attr_reader :args, :request
+  attr_reader :headers, :request, :request_args, :requested_url
   attr_accessor :body, :charset, :code, :content_type, :http_version
 
   # This method should not be called manually.
-  def initialize(args = {})
-    @args = args
-    @args[:headers] ||= {}
-    @body = args[:body] || ""
-    @debug = args[:debug]
-    @request = args.fetch(:request)
-  end
-
-  # Returns headers given from the host for the result.
-  #===Examples
-  # headers_hash = res.headers
-  def headers
-    @args.fetch(:headers)
+  def initialize(body: "", debug: false, headers: {}, request:)
+    @body = body
+    @headers = headers
+    @request = request
+    @requested_url = request.path
   end
 
   # Returns a certain header by name or false if not found.
   #===Examples
   # val = res.header("content-type")
   def header(key)
-    return false unless @args.fetch(:headers).key?(key)
-    @args.fetch(:headers).fetch(key).first.to_s
+    return false unless headers.key?(key)
+    headers.fetch(key).first.to_s
   end
 
   # Returns true if a header of the given string exists.
   #===Examples
   # print "No content-type was given." if !http.header?("content-type")
   def header?(key)
-    return true if @args[:headers].key?(key) && @args[:headers][key].first.to_s.length > 0
+    return true if headers.key?(key) && headers[key].first.to_s.length > 0
     false
   end
 
@@ -52,14 +44,6 @@ class Http2::Response
     else
       raise "No content-type was given."
     end
-  end
-
-  # Returns the requested URL as a string.
-  #===Examples
-  # res.requested_url #=> "?show=status&action=getstatus"
-  def requested_url
-    raise "URL could not be detected." unless @args[:request_args][:url]
-    @args[:request_args][:url]
   end
 
   # Checks the data that has been sat on the object and raises various exceptions, if it does not validate somehow.
