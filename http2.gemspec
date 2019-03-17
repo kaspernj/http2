@@ -25,12 +25,11 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency("string-cases", "~> 0")
   s.add_development_dependency("rake")
-  s.add_development_dependency("rspec", "~> 3.4.0")
-  s.add_development_dependency("rdoc", "~> 3.12")
+  s.add_development_dependency("rspec")
+  s.add_development_dependency("rdoc")
   s.add_development_dependency("bundler", ">= 1.0.0")
   s.add_development_dependency("hayabusa", "~> 0.0.28")
   s.add_development_dependency("sqlite3")
-  s.add_development_dependency("codeclimate-test-reporter")
-  s.add_development_dependency("best_practice_project", ">= 0.0.4")
+  s.add_development_dependency("best_practice_project")
   s.add_development_dependency("rubocop", "~> 0.35.0")
 end

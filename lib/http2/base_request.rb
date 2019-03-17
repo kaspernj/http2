@@ -9,7 +9,7 @@ class Http2::BaseRequest
     @debug = http2.debug
     @nl = http2.nl
 
-    @args.each do |key, _val|
+    @args.each_key do |key|
       raise "Invalid key: '#{key}'." unless VALID_ARGUMENTS_POST.include?(key)
     end
 
