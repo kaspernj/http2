@@ -40,7 +40,6 @@ class Http2
     set_default_values
     @cookies = {}
     @mutex = Monitor.new
-
     @connection = ::Http2::Connection.new(self)
 
     if block_given?
@@ -243,7 +242,7 @@ private
     host = args[:host] || self.host
     port = args[:port] || self.port
 
-    host_header_string = host.to_s # Copy host string to avoid changing the original string if port has been given!
+    host_header_string = host.dup # Copy host string to avoid changing the original string if port has been given!
     host_header_string << ":#{port}" if port && ![80, 443].include?(port.to_i) && !@args[:skip_port_in_host_header]
     host_header_string
   end
@@ -273,7 +272,7 @@ private
     args = {host: args} if args.is_a?(String)
     raise "Arguments wasnt a hash." unless args.is_a?(Hash)
 
-    args.each do |key, _val|
+    args.each_key do |key|
       raise "Invalid key: '#{key}'." unless VALID_ARGUMENTS_INITIALIZE.include?(key)
     end
 
