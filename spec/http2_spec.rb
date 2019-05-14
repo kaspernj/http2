@@ -26,7 +26,7 @@ describe "Http2" do
                 }
               ]
             },
-            "val9" => ["a", "b", "d"]
+            "val9" => %w[a b d]
           }
         )
         res = JSON.parse(resp.body)

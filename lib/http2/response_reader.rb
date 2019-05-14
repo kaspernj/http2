@@ -15,7 +15,7 @@ class Http2::ResponseReader
     @conn = @http2.connection
 
     read_headers
-    read_body if @length == nil || @length > 0
+    read_body if @length == nil || @length.zero?
     finish
   end
 
@@ -27,6 +27,7 @@ class Http2::ResponseReader
       if line == "\n" || line == "\r\n" || line == @nl
         puts "Http2: Changing mode to body!" if @debug
         raise "No headers was given at all? Possibly corrupt state after last request?" if @response.headers.empty?
+
         @mode = "body"
         @http2.on_content_call(@args, @nl)
         break
@@ -61,9 +62,7 @@ class Http2::ResponseReader
     # Validate that the response is as it should be.
     puts "Http2: Validating response." if @debug
 
-    unless @response.code
-      raise "No status-code was received from the server. Headers: '#{@response.headers}' Body: '#{@response.body}'."
-    end
+    raise "No status-code was received from the server. Headers: '#{@response.headers}' Body: '#{@response.body}'." unless @response.code
 
     @response.validate!
     check_and_decode
@@ -89,16 +88,16 @@ private
     end
   end
 
-  REDIRECT_CODES = [302, 303, 307]
+  REDIRECT_CODES = [302, 303, 307].freeze
   def redirect_response?
     REDIRECT_CODES.include?(response.code.to_i) && response.header?("location") && @http2.args[:follow_redirects]
   end
 
   def redirect_using_same_connection?(args)
     if !args[:host] || args[:host] == @args[:host]
-      return true
+      true
     else
-      return false
+      false
     end
   end
 
@@ -110,7 +109,7 @@ private
     uri = URI.parse(url)
 
     url = uri.path
-    url << "?#{uri.query}" if uri.query.to_s.length > 0
+    url << "?#{uri.query}" unless uri.query.to_s.empty?
     url = url.gsub(/\A\//, "")
 
     args = @http2.args
@@ -135,7 +134,7 @@ private
 
       begin
         valid_string = ic.encode("UTF-8")
-      rescue
+      rescue StandardError
         valid_string = untrusted_str.force_encoding("UTF-8").encode("UTF-8", invalid: :replace, replace: "").encode("UTF-8")
       end
 
@@ -171,7 +170,13 @@ private
     if line
       @rec_count += line.length
     elsif !line && @rec_count <= 0
-      raise Errno::ECONNABORTED, "Server closed the connection before being able to read anything (KeepAliveMax: '#{@http2.keepalive_max}', Connection: '#{@connection}', PID: '#{Process.pid}')."
+      parts = [
+        "KeepAliveMax: '#{@http2.keepalive_max}'",
+        "Connection: '#{@connection}'",
+        "PID: '#{Process.pid}'"
+      ]
+
+      raise Errno::ECONNABORTED, "Server closed the connection before being able to read anything (#{parts.join(", ")})."
     end
   end
 
@@ -242,15 +247,13 @@ private
     @response.headers[key] = [] unless @response.headers.key?(key)
     @response.headers[key] << value
 
-    if key != "transfer-encoding" && key != "content-length" && key != "connection" && key != "keep-alive"
-      @http2.on_content_call(@args, line)
-    end
+    @http2.on_content_call(@args, line) if key != "transfer-encoding" && key != "content-length" && key != "connection" && key != "keep-alive"
   end
 
   # Parses the body based on given headers and saves it to the result-object.
   # http.parse_body(str)
   def parse_body(line)
-    return :break if @length == 0
+    return :break if @length.zero?
 
     if @transfer_encoding == "chunked"
       return parse_body_chunked(line)
@@ -265,15 +268,16 @@ private
   def parse_body_chunked(line)
     len = line.strip.hex
 
-    if len > 0
+    if len.positive?
       read = @conn.read(len)
       return :break if read == "" || read == "\n" || read == "\r\n"
+
       @response.body << read
       @http2.on_content_call(@args, read)
     end
 
     nl = @conn.gets
-    if len == 0
+    if len.zero?
       if nl == "\n" || nl == "\r\n"
         return :break
       else

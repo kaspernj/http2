@@ -3,7 +3,8 @@ require "uri"
 require "monitor" unless ::Kernel.const_defined?(:Monitor)
 require "string-cases"
 
-# This class tries to emulate a browser in Ruby without any visual stuff. Remember cookies, keep sessions alive, reset connections according to keep-alive rules and more.
+# This class tries to emulate a browser in Ruby without any visual stuff.
+# Remember cookies, keep sessions alive, reset connections according to keep-alive rules and more.
 #===Examples
 # Http2.new(host: "www.somedomain.com", port: 80, ssl: false, debug: false) do |http|
 #  res = http.get("index.rhtml?show=some_page")
@@ -19,7 +20,7 @@ class Http2
   def self.const_missing(name)
     file_path = "#{File.dirname(__FILE__)}/http2/#{::StringCases.camel_to_snake(name)}.rb"
 
-    if File.exists?(file_path)
+    if File.exist?(file_path)
       require file_path
       return Http2.const_get(name) if Http2.const_defined?(name)
     end
@@ -30,7 +31,10 @@ class Http2
   attr_reader :autostate, :connection, :cookies, :args, :debug, :mutex, :resp, :raise_errors, :nl
   attr_accessor :keepalive_max, :keepalive_timeout
 
-  VALID_ARGUMENTS_INITIALIZE = [:host, :port, :skip_port_in_host_header, :ssl, :ssl_skip_verify, :nl, :user_agent, :raise_errors, :follow_redirects, :debug, :encoding_gzip, :autostate, :basic_auth, :extra_headers, :proxy]
+  VALID_ARGUMENTS_INITIALIZE = [
+    :host, :port, :skip_port_in_host_header, :ssl, :ssl_skip_verify, :nl, :user_agent, :raise_errors,
+    :follow_redirects, :debug, :encoding_gzip, :autostate, :basic_auth, :extra_headers, :proxy
+  ].freeze
   def initialize(args = {})
     @args = parse_init_args(args)
     set_default_values
@@ -122,9 +126,9 @@ class Http2
   # Proxies the request to another method but forces the method to be "DELETE".
   def delete(args)
     if args[:json]
-      return post(args.merge(method: :delete))
+      post(args.merge(method: :delete))
     else
-      return get(args.merge(method: :delete))
+      get(args.merge(method: :delete))
     end
   end
 
@@ -203,6 +207,7 @@ class Http2
   def cookie(name)
     name = name.to_s
     return @cookies.fetch(name) if @cookies.key?(name)
+
     raise "No cookie by that name: '#{name}' in '#{@cookies.keys.join(", ")}'"
   end
 
@@ -238,7 +243,7 @@ private
     host = args[:host] || self.host
     port = args[:port] || self.port
 
-    host_header_string = "#{host}" # Copy host string to avoid changing the original string if port has been given!
+    host_header_string = host.to_s # Copy host string to avoid changing the original string if port has been given!
     host_header_string << ":#{port}" if port && ![80, 443].include?(port.to_i) && !@args[:skip_port_in_host_header]
     host_header_string
   end
@@ -275,6 +280,7 @@ private
     args[:proxy][:connect] = true if args[:proxy] && !args[:proxy].key?(:connect) && args[:ssl]
 
     raise "No host was given." unless args[:host]
+
     args
   end
 

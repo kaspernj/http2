@@ -28,7 +28,7 @@ class Http2::UrlBuilder
   end
 
   def build_path_and_params
-    url = "#{path}"
+    url = path.to_s
 
     if params?
       url << "?"

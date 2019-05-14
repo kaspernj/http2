@@ -33,6 +33,7 @@ class Http2::Connection
   def sock_write(str)
     str = str.to_s
     return if str.empty?
+
     count = @sock.write(str)
     raise "Couldnt write to socket: '#{count}', '#{str}'." if count <= 0
   end
@@ -49,6 +50,7 @@ class Http2::Connection
 
     begin
       raise Errno::EPIPE, "The socket is closed." if !@sock || @sock.closed?
+
       sock_write(str)
     rescue Errno::EPIPE # this can also be thrown by puts.
       reconnect
@@ -131,6 +133,7 @@ class Http2::Connection
 
     res = @sock_plain.gets.to_s
     raise "Couldn't connect through proxy: #{res}" unless res.match(/^http\/1\.(0|1)\s+200/i)
+
     @sock_plain.gets
 
     @proxy_connect = true

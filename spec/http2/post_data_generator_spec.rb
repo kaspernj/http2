@@ -19,6 +19,7 @@ describe Http2::PostDataGenerator do
         }
       }
     ).generate
-    raise "Expected 'test1%5Border%5D%5B%5B%3ABnet_profile%2C+%22profile_id%22%5D%5D=5' but got: '#{res}'." if res != "test1%5Border%5D%5B%5B%3ABnet_profile%2C+%22profile_id%22%5D%5D=5"
+
+    expect(res).to eq "test1%5Border%5D%5B%5B%3ABnet_profile%2C+%22profile_id%22%5D%5D=5"
   end
 end
