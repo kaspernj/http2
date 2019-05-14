@@ -88,7 +88,7 @@ private
     end
   end
 
-  REDIRECT_CODES = [302, 303, 307].freeze
+  REDIRECT_CODES = [301, 302, 303, 307, 308].freeze
   def redirect_response?
     REDIRECT_CODES.include?(response.code.to_i) && response.header?("location") && @http2.args[:follow_redirects]
   end
