@@ -4,7 +4,7 @@ class Http2::Utils
   def self.urlenc(string)
     # Thanks to CGI framework
     string.to_s.gsub(/([^ a-zA-Z0-9_.-]+)/) do
-      "%" + $1.unpack("H2" * $1.bytesize).join("%").upcase
+      "%" + Regexp.last_match(1).unpack("H2" * Regexp.last_match(1).bytesize).join("%").upcase
     end.tr(" ", "+")
   end
 
@@ -12,18 +12,20 @@ class Http2::Utils
   def self.urldec(string)
     # Thanks to CGI framework
     string.to_s.tr("+", " ").gsub(/((?:%[0-9a-fA-F]{2})+)/) do
-      [$1.delete("%")].pack("H*")
+      [Regexp.last_match(1).delete("%")].pack("H*")
     end
   end
 
   # Parses a cookies-string and returns them in an array.
   def self.parse_set_cookies(str)
-    str = "#{str}"
+    str = str.to_s
     return [] if str.empty?
+
     cookie_start_regex = /^(.+?)=(.*?)(;\s*|$)/
 
     match = str.match(cookie_start_regex)
     raise "Could not match cookie: '#{str}'" unless match
+
     str.gsub!(cookie_start_regex, "")
 
     cookie_data = {

@@ -1,7 +1,7 @@
 class Http2::BaseRequest
   attr_reader :http2, :args, :debug
 
-  VALID_ARGUMENTS_POST = [:post, :url, :default_headers, :headers, :json, :method, :cookies, :on_content, :content_type]
+  VALID_ARGUMENTS_POST = [:post, :url, :default_headers, :headers, :json, :method, :cookies, :on_content, :content_type].freeze
 
   def initialize(http2, args)
     @http2 = http2

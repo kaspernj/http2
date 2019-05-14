@@ -2,11 +2,13 @@
 class Http2::Response
   # All the data the response contains. Headers, body, cookies, requested URL and more.
   attr_reader :headers, :request, :request_args, :requested_url
-  attr_accessor :body, :charset, :code, :content_type, :http_version
+  attr_accessor :body, :charset, :code, :http_version
+  attr_writer :content_type
 
   # This method should not be called manually.
   def initialize(body: "", debug: false, headers: {}, request:)
     @body = body
+    @debug = debug
     @headers = headers
     @request = request
     @requested_url = request.path
@@ -17,6 +19,7 @@ class Http2::Response
   # val = res.header("content-type")
   def header(key)
     return false unless headers.key?(key)
+
     headers.fetch(key).first.to_s
   end
 
@@ -24,7 +27,8 @@ class Http2::Response
   #===Examples
   # print "No content-type was given." if !http.header?("content-type")
   def header?(key)
-    return true if headers.key?(key) && headers[key].first.to_s.length > 0
+    return true if headers.key?(key) && !headers[key].first.to_s.empty?
+
     false
   end
 
@@ -32,7 +36,7 @@ class Http2::Response
     if header?("content-length")
       header("content-length").to_i
     elsif @body
-      return @body.bytesize
+      @body.bytesize
     else
       raise "Couldn't calculate content-length."
     end
@@ -40,7 +44,7 @@ class Http2::Response
 
   def content_type
     if header?("content-type")
-      return header("content-type")
+      header("content-type")
     else
       raise "No content-type was given."
     end
@@ -89,7 +93,7 @@ private
 
   # Checks that the length of the body is the same as the given content-length if given.
   def validate_body_versus_content_length!
-    unless self.header?("content-length")
+    unless header?("content-length")
       puts "Http2: No content length given - skipping length validation." if @debug
       return nil
     end
