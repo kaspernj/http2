@@ -15,7 +15,7 @@ class Http2::ResponseReader
     @conn = @http2.connection
 
     read_headers
-    read_body if @length == nil || @length.zero?
+    read_body if @length == nil || @length.positive?
     finish
   end
 
