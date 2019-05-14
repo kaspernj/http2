@@ -3,6 +3,7 @@ class Http2::Response
   # All the data the response contains. Headers, body, cookies, requested URL and more.
   attr_reader :headers, :request, :request_args, :requested_url
   attr_accessor :body, :charset, :code, :http_version
+  attr_writer :content_type
 
   # This method should not be called manually.
   def initialize(body: "", debug: false, headers: {}, request:)

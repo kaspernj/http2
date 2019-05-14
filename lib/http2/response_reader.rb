@@ -253,7 +253,7 @@ private
   # Parses the body based on given headers and saves it to the result-object.
   # http.parse_body(str)
   def parse_body(line)
-    return :break if @length.zero?
+    return :break if @length&.zero?
 
     if @transfer_encoding == "chunked"
       return parse_body_chunked(line)

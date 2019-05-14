@@ -56,13 +56,13 @@ private
 
   def read_file(path, praw)
     File.open(path, "r") do |fp|
-      while (data = fp.sysread(4096))
-        praw << data
+      begin
+        while (data = fp.sysread(4096))
+          praw << data
+        end
+      rescue EOFError # rubocop:disable Lint/HandleExceptions
+        # Happens when done.
       end
-    # rubocop:disable Lint/HandleExceptions
-    rescue EOFError
-      # rubocop:enable Lint/HandleExceptions
-      # Happens when done.
     end
   end
 

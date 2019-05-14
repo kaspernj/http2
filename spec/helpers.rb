@@ -16,8 +16,10 @@ module Helpers
 
   def with_http(args = {})
     with_webserver do |hayabusa|
-      Http2.new({host: "localhost", port: hayabusa.port, encoding_gzip: false}.merge(args)) do |http|
-        yield http
+      begin
+        Http2.new({host: "localhost", port: hayabusa.port, encoding_gzip: false}.merge(args)) do |http|
+          yield http
+        end
       rescue Http2::Errors::Internalserver => e
         puts "Body of error-response: #{e.response.body}"
         raise e
