@@ -89,7 +89,7 @@ private
     end
   end
 
-  REDIRECT_CODES = [302, 303, 307]
+  REDIRECT_CODES = [301, 302, 303, 307, 308]
   def redirect_response?
     REDIRECT_CODES.include?(response.code.to_i) && response.header?("location") && @http2.args[:follow_redirects]
   end
