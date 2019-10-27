@@ -24,7 +24,7 @@ GEM
       ruby_process
       tpool
       wref (= 0.0.6)
-    jaro_winkler (1.5.2)
+    jaro_winkler (1.5.3)
     knjrbfw (0.0.110)
       datet
       http2
@@ -35,8 +35,8 @@ GEM
     mail (2.7.1)
       mini_mime (>= 0.1.1)
     mini_mime (1.0.1)
-    parallel (1.17.0)
-    parser (2.6.3.0)
+    parallel (1.18.0)
+    parser (2.6.5.0)
       ast (~> 2.4.0)
     php4r (0.0.4)
       datet
@@ -58,14 +58,14 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.9.0)
     rspec-support (3.9.0)
-    rubocop (0.69.0)
+    rubocop (0.75.1)
       jaro_winkler (~> 1.5.1)
       parallel (~> 1.10)
       parser (>= 2.6)
       rainbow (>= 2.2.2, < 4.0)
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 1.4.0, < 1.7)
-    ruby-progressbar (1.10.0)
+    ruby-progressbar (1.10.1)
     ruby_process (0.0.13)
       string-cases
       tsafe
