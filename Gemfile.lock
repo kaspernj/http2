@@ -70,7 +70,7 @@ GEM
       string-cases
       tsafe
       wref
-    sqlite3 (1.4.0)
+    sqlite3 (1.4.1)
     string-cases (0.0.4)
     string-strtr (0.0.3)
     tpool (0.0.4)
