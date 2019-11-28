@@ -24,7 +24,7 @@ GEM
       ruby_process
       tpool
       wref (= 0.0.6)
-    jaro_winkler (1.5.3)
+    jaro_winkler (1.5.4)
     knjrbfw (0.0.110)
       datet
       http2
@@ -35,7 +35,7 @@ GEM
     mail (2.7.1)
       mini_mime (>= 0.1.1)
     mini_mime (1.0.1)
-    parallel (1.18.0)
+    parallel (1.19.1)
     parser (2.6.5.0)
       ast (~> 2.4.0)
     php4r (0.0.4)
@@ -58,7 +58,7 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.9.0)
     rspec-support (3.9.0)
-    rubocop (0.76.0)
+    rubocop (0.77.0)
       jaro_winkler (~> 1.5.1)
       parallel (~> 1.10)
       parser (>= 2.6)
