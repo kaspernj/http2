@@ -81,7 +81,7 @@ private
       url, args = url_and_args_from_location
 
       if redirect_using_same_connection?(args)
-        return @http2.get(url)
+        @http2.get(url)
       else
         ::Http2.new(args).get(url)
       end
@@ -256,7 +256,7 @@ private
     return :break if @length&.zero?
 
     if @transfer_encoding == "chunked"
-      return parse_body_chunked(line)
+      parse_body_chunked(line)
     else
       puts "Http2: Adding #{line.to_s.bytesize} to the body." if @debug
       @response.body << line

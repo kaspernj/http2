@@ -59,7 +59,7 @@ private
       while (data = fp.sysread(4096))
         praw << data
       end
-    rescue EOFError # rubocop:disable Lint/HandleExceptions
+    rescue EOFError # rubocop:disable Lint/SuppressedException
       # Happens when done.
     end
   end
