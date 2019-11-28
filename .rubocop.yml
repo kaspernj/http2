@@ -13,9 +13,6 @@ AllCops:
 Layout/AccessModifierIndentation:
   EnforcedStyle: outdent
 
-Layout/AlignParameters:
-  EnforcedStyle: with_fixed_indentation
-
 Layout/CaseIndentation:
   EnforcedStyle: end
 
@@ -33,6 +30,9 @@ Layout/MultilineMethodCallIndentation:
 
 Layout/MultilineOperationIndentation:
   EnforcedStyle: indented
+
+Layout/ParameterAlignment:
+  EnforcedStyle: with_fixed_indentation
 
 Layout/SpaceInsideHashLiteralBraces:
   EnforcedStyle: no_space
@@ -57,10 +57,6 @@ Metrics/MethodLength:
 
 # Metrics/PerceivedComplexity:
 #   Max: 10
-
-# .find_each is not the same as .each
-Rails/FindEach:
-  Enabled: false
 
 Style/ClassAndModuleChildren:
   EnforcedStyle: compact
