@@ -1,6 +1,7 @@
 [![Code Climate](https://codeclimate.com/github/kaspernj/http2.png)](https://codeclimate.com/github/kaspernj/http2)
 [![Code Climate](https://codeclimate.com/github/kaspernj/http2/coverage.png)](https://codeclimate.com/github/kaspernj/http2)
-[![Build Status](https://img.shields.io/shippable/540e7b9b3479c5ea8f9ec21d.svg)](https://app.shippable.com/projects/540e7b9b3479c5ea8f9ec21d/builds/latest)
+[![Build Status](https://www.peakflow.io/en/projects/http2/branch-statuses/master.svg
+)](https://www.peakflow.io/en/projects/http2/build-groups)
 
 # http2
 
