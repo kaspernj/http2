@@ -6,8 +6,10 @@ AllCops:
   Exclude:
     - db/data_schema.rb
     - db/schema.rb
+    - http2.gemspec
     - node_modules/**/*
     - spec/dummy/db/schema.rb
+  NewCops: enable
   TargetRubyVersion: 2.5
 
 Layout/AccessModifierIndentation:
@@ -76,6 +78,9 @@ Metrics/MethodLength:
 # Metrics/PerceivedComplexity:
 #   Max: 10
 
+Style/CaseLikeIf:
+  Enabled: false
+
 Style/ClassAndModuleChildren:
   EnforcedStyle: compact
 
@@ -83,6 +88,9 @@ Style/ConditionalAssignment:
   Enabled: false
 
 Style/Documentation:
+  Enabled: false
+
+Style/ExplicitBlockArgument:
   Enabled: false
 
 Style/ExponentialNotation:
@@ -103,6 +111,9 @@ Style/HashTransformKeys:
 
 Style/HashTransformValues:
   Enabled: true
+
+Style/KeywordParametersOrder:
+  Enabled: false
 
 Style/LambdaCall:
   Enabled: false

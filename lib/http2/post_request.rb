@@ -60,11 +60,7 @@ private
       "Content-Type" => content_type
     }
     headers_hash.merge! @http2.default_headers(@args)
-
-    unless headers_hash["Accept"]
-      headers_hash["Accept"] = "application/json" if @args[:json]
-    end
-
+    headers_hash["Accept"] = "application/json" if @args[:json] && !headers_hash["Accept"]
     headers_hash
   end
 end

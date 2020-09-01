@@ -4,7 +4,7 @@ class Http2::Utils
   def self.urlenc(string)
     # Thanks to CGI framework
     string.to_s.gsub(/([^ a-zA-Z0-9_.-]+)/) do
-      "%" + Regexp.last_match(1).unpack("H2" * Regexp.last_match(1).bytesize).join("%").upcase
+      "%#{Regexp.last_match(1).unpack("H2" * Regexp.last_match(1).bytesize).join("%").upcase}"
     end.tr(" ", "+")
   end
 
