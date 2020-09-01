@@ -55,9 +55,7 @@ class Http2::ResponseReader
 
   def finish
     # Check if we should reconnect based on keep-alive-max.
-    if @keepalive_max == 1 || @connection == "close"
-      @conn.close unless @conn.closed?
-    end
+    @conn.close if !@conn.closed? && (@keepalive_max == 1 || @connection == "close")
 
     # Validate that the response is as it should be.
     puts "Http2: Validating response." if @debug
@@ -216,7 +214,7 @@ private
       key = match[1].downcase
       set_header_special_values(key, match[2])
       parse_normal_header(line, key, match[1], match[2])
-    elsif (match = line.match(/^HTTP\/([\d\.]+)\s+(\d+)\s+(.+)$/))
+    elsif (match = line.match(/^HTTP\/([\d\.]+)\s+(\d+)\s+(.+)$/)) # rubocop:disable Style/RedundantRegexpEscape
       @response.code = match[2]
       @response.http_version = match[1]
       @http2.on_content_call(@args, line)
