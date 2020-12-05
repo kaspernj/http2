@@ -5,9 +5,14 @@ class Http2::Errors
   end
 
   class Noaccess < BaseError; end
+
   class Internalserver < BaseError; end
+
   class Notfound < BaseError; end
+
   class Badrequest < BaseError; end
+
   class Unauthorized < BaseError; end
+
   class UnsupportedMediaType < BaseError; end
 end
