@@ -153,7 +153,13 @@ class Http2::Connection
     require "openssl" unless ::Kernel.const_defined?(:OpenSSL)
 
     ssl_context = OpenSSL::SSL::SSLContext.new
-    ssl_context.verify_mode = OpenSSL::SSL::VERIFY_PEER unless @args[:ssl_skip_verify]
+
+    if @args[:ssl_skip_verify]
+      ssl_context.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    else
+      ssl_context.verify_mode = OpenSSL::SSL::VERIFY_PEER
+    end
+
     @sock_ssl = OpenSSL::SSL::SSLSocket.new(@sock_plain, ssl_context)
     @sock_ssl.sync_close = true
     @sock_ssl.connect
