@@ -161,6 +161,7 @@ class Http2::Connection
     end
 
     @sock_ssl = OpenSSL::SSL::SSLSocket.new(@sock_plain, ssl_context)
+    @sock_ssl.hostname = @http2.host
     @sock_ssl.sync_close = true
     @sock_ssl.connect
 
