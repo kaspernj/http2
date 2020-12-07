@@ -87,7 +87,6 @@ class Http2
   #===Examples
   # http.destroy
   def destroy
-    @args = nil
     @cookies = nil
     @debug = nil
     @mutex = nil
