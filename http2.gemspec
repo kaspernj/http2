@@ -7,7 +7,7 @@
 
 Gem::Specification.new do |s|
   s.name = "http2"
-  s.version = "0.0.33"
+  s.version = "0.0.34"
 
   s.require_paths = ["lib"]
   s.authors = ["Kasper Johansen"]
