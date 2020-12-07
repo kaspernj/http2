@@ -58,7 +58,7 @@ class Http2::Response
 
   # Returns true if the result is JSON.
   def json?
-    content_type == "application/json"
+    content_type&.start_with?("application/json")
   end
 
   def json

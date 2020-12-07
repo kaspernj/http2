@@ -37,7 +37,7 @@ describe Http2::Response do
         res = http.post(url: "json_test.rhtml", post: {test: "test2"})
 
         expect(res).to receive(:content_type).and_return("application/json; charset=utf-8")
-        expect(res.json["_POST"]).to eq("test" => "test2")
+        expect(res.json?).to eq true
       end
     end
   end
