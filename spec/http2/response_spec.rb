@@ -15,10 +15,30 @@ describe Http2::Response do
     end
   end
 
-  it "#json?" do
-    with_http do |http|
-      res = http.get("json_test.rhtml")
-      expect(res.json?).to eq true
+  describe "#json?" do
+    it "returns true for 'application/json'" do
+      with_http do |http|
+        res = http.get("json_test.rhtml")
+
+        expect(res).to receive(:content_type).and_return("application/json")
+        expect(res.json?).to eq true
+      end
+    end
+
+    it "returns true for 'application/json'" do
+      with_http do |http|
+        res = http.get("json_test.rhtml")
+        expect(res.json?).to eq true
+      end
+    end
+
+    it "returns true for 'application/json'" do
+      with_http do |http|
+        res = http.post(url: "json_test.rhtml", post: {test: "test2"})
+
+        expect(res).to receive(:content_type).and_return("application/json; charset=utf-8")
+        expect(res.json?).to eq true
+      end
     end
   end
 

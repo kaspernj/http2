@@ -24,6 +24,7 @@ GEM
       ruby_process
       tpool
       wref (= 0.0.6)
+    json (2.3.1)
     knjrbfw (0.0.110)
       datet
       http2
@@ -91,6 +92,7 @@ DEPENDENCIES
   bundler (>= 1.0.0)
   hayabusa (~> 0.0.28)
   http2!
+  json
   rake
   rdoc
   rspec
