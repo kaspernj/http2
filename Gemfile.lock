@@ -98,6 +98,3 @@ DEPENDENCIES
   rspec
   rubocop
   sqlite3
-
-BUNDLED WITH
-   1.17.3
