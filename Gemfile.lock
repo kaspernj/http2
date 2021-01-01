@@ -43,7 +43,7 @@ GEM
       http2
       string-strtr
     rainbow (3.0.0)
-    rake (13.0.1)
+    rake (13.0.3)
     rdoc (6.3.0)
     regexp_parser (2.0.0)
     rexml (3.2.4)
