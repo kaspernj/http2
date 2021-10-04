@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    http2 (0.0.34)
+    http2 (0.0.35)
       string-cases (~> 0)
 
 GEM
@@ -98,3 +98,6 @@ DEPENDENCIES
   rspec
   rubocop
   sqlite3
+
+BUNDLED WITH
+   2.2.28
