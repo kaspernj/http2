@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    http2 (0.0.35)
+    http2 (0.0.36)
       string-cases (~> 0)
 
 GEM
