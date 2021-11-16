@@ -1,7 +1,7 @@
 require "spec_helper"
 
 describe Http2::PostDataGenerator do
-  it "should be able to recursively parse post-data-hashes." do
+  it "recursively parses post-data-hashes." do
     res = Http2::PostDataGenerator.new(
       "test1" => "test2"
     ).generate

@@ -132,7 +132,7 @@ class Http2::Connection
     @sock_plain.write(@nl)
 
     res = @sock_plain.gets.to_s
-    raise "Couldn't connect through proxy: #{res}" unless res.match(/^http\/1\.(0|1)\s+200/i)
+    raise "Couldn't connect through proxy: #{res}" unless res.match?(/^http\/1\.(0|1)\s+200/i)
 
     @sock_plain.gets
 

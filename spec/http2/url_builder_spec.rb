@@ -1,7 +1,7 @@
 require "spec_helper"
 
 describe Http2::UrlBuilder do
-  context "#build" do
+  describe "#build" do
     it "builds correctly" do
       ub = Http2::UrlBuilder.new
       ub.protocol = "https"
