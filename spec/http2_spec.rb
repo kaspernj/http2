@@ -2,7 +2,7 @@ require "spec_helper"
 require "json"
 
 describe "Http2" do
-  it "should be able to do normal post-requests." do
+  it "does normal post-requests" do
     # Test posting keep-alive and advanced post-data.
     with_http do |http|
       0.upto(5) do
@@ -44,17 +44,19 @@ describe "Http2" do
     end
   end
 
-  it "#reconnect" do
-    with_http(follow_redirects: false, encoding_gzip: false) do |http|
-      resp1 = http.get("multipart_test.rhtml")
-      http.reconnect
-      resp2 = http.get("multipart_test.rhtml")
+  describe "#reconnect" do
+    it "reconnects" do
+      with_http(follow_redirects: false, encoding_gzip: false) do |http|
+        resp1 = http.get("multipart_test.rhtml")
+        http.reconnect
+        resp2 = http.get("multipart_test.rhtml")
 
-      expect(resp1.body).to eq resp2.body
+        expect(resp1.body).to eq resp2.body
+      end
     end
   end
 
-  it "should be able to do multipart-requests and keep-alive when using multipart." do
+  it "handles multipart-requests and keep-alive when using multipart." do
     with_http(follow_redirects: false) do |http|
       0.upto(5) do
         fpath = File.realpath(__FILE__)
@@ -84,7 +86,7 @@ describe "Http2" do
     end
   end
 
-  it "it should be able to handle keep-alive correctly" do
+  it "handles keep-alive correctly" do
     urls = [
       "content_type_test.rhtml",
       "json_test.rhtml"
@@ -100,13 +102,13 @@ describe "Http2" do
     end
   end
 
-  it "should raise exception when something is not found" do
+  it "raises an error when something is not found" do
     with_http do |http|
       expect { http.get("something_that_does_not_exist.rhtml") }.to raise_error(::Http2::Errors::Notfound)
     end
   end
 
-  it "should be able to post json" do
+  it "posts json" do
     with_http do |http|
       res = http.post(
         url: "json_test.rhtml",
@@ -126,7 +128,7 @@ describe "Http2" do
     end
   end
 
-  it "should be able to post custom content types" do
+  it "posts custom content types" do
     with_http do |http|
       res = http.post(
         url: "content_type_test.rhtml",
@@ -142,7 +144,7 @@ describe "Http2" do
     end
   end
 
-  it "should set various timeouts" do
+  it "sets various timeouts" do
     with_http do |http|
       http.get("content_type_test.rhtml")
       expect(http.keepalive_timeout).to eq 15
@@ -150,7 +152,7 @@ describe "Http2" do
     end
   end
 
-  it "should follow redirects" do
+  it "follows redirects" do
     with_http(follow_redirects: true) do |http|
       resp = http.get("redirect_test.rhtml")
       expect(resp.code).to eq "200"

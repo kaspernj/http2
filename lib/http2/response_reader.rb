@@ -103,15 +103,17 @@ private
     @url ||= response.header("location")
   end
 
+  SSL_AND_PORT_KEYS = [:ssl, :port].freeze
+
   def url_and_args_from_location
     uri = URI.parse(url)
 
     url = uri.path
     url << "?#{uri.query}" unless uri.query.to_s.empty?
-    url = url.gsub(/\A\//, "")
+    url = url.delete_prefix("/")
 
     args = @http2.args
-      .reject { |k, _v| [:ssl, :port].include? k }
+      .reject { |k, _v| SSL_AND_PORT_KEYS.include?(k) }
       .merge(host: uri.host)
 
     args[:ssl] = true if uri.scheme == "https"

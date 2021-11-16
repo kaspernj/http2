@@ -25,14 +25,14 @@ describe Http2::Response do
       end
     end
 
-    it "returns true for 'application/json'" do
+    it "returns true for 'application/json' and getting" do
       with_http do |http|
         res = http.get("json_test.rhtml")
         expect(res.json?).to eq true
       end
     end
 
-    it "returns true for 'application/json'" do
+    it "returns true for 'application/json' and posting" do
       with_http do |http|
         res = http.post(url: "json_test.rhtml", post: {test: "test2"})
 

@@ -1,9 +1,9 @@
 require "spec_helper"
 
-describe Http2 do
+describe Http2::Cookie do
   include Helpers
 
-  it "should parse cookies and let them be read" do
+  it "parses cookies and let them be read" do
     with_http do |http|
       http.get("cookie_test.rhtml")
       expect(http.cookies.length).to eq 2
