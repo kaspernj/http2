@@ -42,9 +42,12 @@ GEM
       datet
       http2
       string-strtr
+    psych (4.0.3)
+      stringio
     rainbow (3.0.0)
     rake (13.0.6)
-    rdoc (6.3.3)
+    rdoc (6.4.0)
+      psych (>= 4.0.0)
     regexp_parser (2.2.0)
     rexml (3.2.5)
     rspec (3.10.0)
@@ -84,6 +87,7 @@ GEM
     sqlite3 (1.4.2)
     string-cases (0.0.4)
     string-strtr (0.0.3)
+    stringio (3.0.1)
     tpool (0.0.4)
     tsafe (0.0.12)
     unicode-display_width (2.1.0)
