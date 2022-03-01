@@ -31,7 +31,7 @@ describe "Http2" do
         )
         res = JSON.parse(resp.body)
 
-        expect(res.is_a?(Hash)).to eq true
+        expect(res.is_a?(Hash)).to be true
         expect(res["val1"]).to eq "test1"
         expect(res["val2"]).to eq "test2"
         expect(res["val3"]["0"]).to eq "test3"
@@ -123,7 +123,7 @@ describe "Http2" do
       expect(json_data["testkey"]).to eq "testvalue"
 
       expect(res.content_type).to eq "application/json"
-      expect(res.json?).to eq true
+      expect(res.json?).to be true
       expect(res.json["_SERVER"]["REQUEST_METHOD"]).to eq "POST"
     end
   end
