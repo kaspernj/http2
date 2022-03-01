@@ -21,14 +21,14 @@ describe Http2::Response do
         res = http.get("json_test.rhtml")
 
         expect(res).to receive(:content_type).and_return("application/json")
-        expect(res.json?).to eq true
+        expect(res.json?).to be true
       end
     end
 
     it "returns true for 'application/json' and getting" do
       with_http do |http|
         res = http.get("json_test.rhtml")
-        expect(res.json?).to eq true
+        expect(res.json?).to be true
       end
     end
 
@@ -37,7 +37,7 @@ describe Http2::Response do
         res = http.post(url: "json_test.rhtml", post: {test: "test2"})
 
         expect(res).to receive(:content_type).and_return("application/json; charset=utf-8")
-        expect(res.json?).to eq true
+        expect(res.json?).to be true
       end
     end
   end
@@ -59,7 +59,7 @@ describe Http2::Response do
   it "#ssl?" do
     with_http do |http|
       res = http.get("json_test.rhtml")
-      expect(res.ssl?).to eq false
+      expect(res.ssl?).to be false
     end
   end
 
@@ -80,7 +80,7 @@ describe Http2::Response do
   it "#header?" do
     with_http do |http|
       res = http.get("json_test.rhtml")
-      expect(res.header?("connection")).to eq true
+      expect(res.header?("connection")).to be true
     end
   end
 
