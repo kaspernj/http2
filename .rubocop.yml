@@ -3,12 +3,6 @@ inherit_from: .rubocop_todo.yml
 AllCops:
   DisplayCopNames: true
   DisplayStyleGuide: true
-  Exclude:
-    - db/data_schema.rb
-    - db/schema.rb
-    - http2.gemspec
-    - node_modules/**/*
-    - spec/dummy/db/schema.rb
   NewCops: enable
   TargetRubyVersion: 2.6
 
