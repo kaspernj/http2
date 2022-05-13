@@ -6,31 +6,31 @@ builds:
     name: Ruby 2.5.9
     script:
       - bundle exec rspec
-  build_1:
+  build_2:
     environment:
       RUBY_VERSION: 2.6.9
     name: Ruby 2.6.9
     script:
       - bundle exec rspec
-  build_1:
+  build_3:
     environment:
       RUBY_VERSION: 2.7.6
     name: Ruby 2.7.6
     script:
       - bundle exec rspec
-  build_2:
+  build_4:
     environment:
       RUBY_VERSION: 3.0.3
     name: Ruby 3.0.3
     script:
       - bundle exec rspec
-  build_2:
+  build_5:
     environment:
       RUBY_VERSION: 3.1.2
     name: Ruby 3.1.2
     script:
       - bundle exec rspec
-  build_3:
+  build_6:
     name: Linters
     script:
       - bundle exec rake best_practice_project:run
