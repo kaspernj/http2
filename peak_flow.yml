@@ -1,15 +1,9 @@
 rvm: true
 builds:
-  build_1:
-    environment:
-      RUBY_VERSION: 2.5.9
-    name: Ruby 2.5.9
-    script:
-      - bundle exec rspec
   build_2:
     environment:
-      RUBY_VERSION: 2.6.9
-    name: Ruby 2.6.9
+      RUBY_VERSION: 2.6.8
+    name: Ruby 2.6.8
     script:
       - bundle exec rspec
   build_3:
