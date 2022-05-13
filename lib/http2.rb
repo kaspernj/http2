@@ -28,19 +28,21 @@ class Http2
     super
   end
 
-  attr_reader :autostate, :connection, :cookies, :args, :debug, :mutex, :resp, :raise_errors, :nl
+  attr_reader :autostate, :connection, :cookies, :args, :debug, :mutex, :resp, :raise_errors, :nl, :user_agent
   attr_accessor :keepalive_max, :keepalive_timeout
 
+  DEFAULT_USER_AGENT = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)".freeze
   VALID_ARGUMENTS_INITIALIZE = [
     :host, :port, :skip_port_in_host_header, :ssl, :ssl_skip_verify, :nl, :user_agent, :raise_errors,
     :follow_redirects, :debug, :encoding_gzip, :autostate, :basic_auth, :extra_headers, :proxy
   ].freeze
-  def initialize(args = {})
+  def initialize(user_agent: DEFAULT_USER_AGENT, **args)
     @args = parse_init_args(args)
     set_default_values
     @cookies = {}
     @mutex = Monitor.new
     @connection = ::Http2::Connection.new(self)
+    @user_agent = user_agent
 
     if block_given?
       begin
@@ -90,7 +92,6 @@ class Http2
     @cookies = nil
     @debug = nil
     @mutex = nil
-    @uagent = nil
     @keepalive_timeout = nil
     @request_last = nil
 
@@ -139,7 +140,7 @@ class Http2
 
     headers = {
       "Connection" => "Keep-Alive",
-      "User-Agent" => @uagent,
+      "User-Agent" => user_agent,
       "Host" => host_header
     }
 
@@ -293,12 +294,6 @@ private
       else
         @args[:port] = 80
       end
-    end
-
-    if @args[:user_agent]
-      @uagent = @args[:user_agent]
-    else
-      @uagent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)"
     end
 
     if !@args.key?(:raise_errors) || @args[:raise_errors]
