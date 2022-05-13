@@ -81,7 +81,7 @@ private
       if redirect_using_same_connection?(args)
         @http2.get(url)
       else
-        ::Http2.new(args).get(url)
+        ::Http2.new(**args).get(url)
       end
     end
   end
