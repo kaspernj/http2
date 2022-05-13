@@ -3,17 +3,12 @@ inherit_from: .rubocop_todo.yml
 AllCops:
   DisplayCopNames: true
   DisplayStyleGuide: true
-  Exclude:
-    - db/data_schema.rb
-    - db/schema.rb
-    - http2.gemspec
-    - node_modules/**/*
-    - spec/dummy/db/schema.rb
   NewCops: enable
-  TargetRubyVersion: 2.5
+  TargetRubyVersion: 2.7
 
 require:
   - rubocop-performance
+  - rubocop-rake
   - rubocop-rspec
 
 Layout/AccessModifierIndentation:
