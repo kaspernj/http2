@@ -2,39 +2,50 @@ PATH
   remote: .
   specs:
     http2 (0.0.36)
-      string-cases (~> 0)
+      string-cases
 
 GEM
   remote: http://rubygems.org/
   specs:
+    array_enumerator (0.0.10)
     ast (2.4.2)
     auto_autoloader (0.0.5)
       string-cases
+    baza (0.0.38)
+      array_enumerator (~> 0.0.10)
+      auto_autoloader (~> 0.0.5)
+      datet (~> 0.0.25)
+      event_handler (~> 0.0.0)
+      simple_delegate (~> 0.0.2)
+      string-cases (~> 0.0.4)
+      wref (~> 0.0.8)
     best_practice_project (0.0.12)
       auto_autoloader (>= 0.0.5)
     datet (0.0.25)
     diff-lcs (1.5.0)
     erubis (2.7.0)
-    hayabusa (0.0.28)
+    event_handler (0.0.0)
+    hayabusa (0.0.30)
+      baza (>= 0.0.38)
       datet
       erubis
       http2
-      knjrbfw (= 0.0.110)
+      knjrbfw (>= 0.0.114)
       mail
       ruby_process
       tpool
-      wref (= 0.0.6)
+      wref (>= 0.0.6)
     json (2.6.1)
-    knjrbfw (0.0.110)
+    knjrbfw (0.0.114)
       datet
       http2
       php4r
       ruby_process
       tsafe
-      wref
+      wref (>= 0.0.8)
     mail (2.7.1)
       mini_mime (>= 0.1.1)
-    mini_mime (1.0.1)
+    mini_mime (1.1.2)
     parallel (1.22.1)
     parser (3.1.2.0)
       ast (~> 2.4.1)
@@ -86,6 +97,7 @@ GEM
       string-cases
       tsafe
       wref
+    simple_delegate (0.0.4)
     sqlite3 (1.4.2)
     string-cases (0.0.4)
     string-strtr (0.0.3)
@@ -93,7 +105,7 @@ GEM
     tpool (0.0.4)
     tsafe (0.0.12)
     unicode-display_width (2.1.0)
-    wref (0.0.6)
+    wref (0.0.8)
 
 PLATFORMS
   ruby
@@ -101,7 +113,7 @@ PLATFORMS
 DEPENDENCIES
   best_practice_project
   bundler (>= 1.0.0)
-  hayabusa (~> 0.0.28)
+  hayabusa (>= 0.0.30)
   http2!
   json
   rake
@@ -112,6 +124,7 @@ DEPENDENCIES
   rubocop-rake
   rubocop-rspec
   sqlite3
+  wref (>= 0.0.8)
 
 BUNDLED WITH
-   2.2.28
+   2.3.13

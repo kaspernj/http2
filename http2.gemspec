@@ -24,11 +24,11 @@ Gem::Specification.new do |s|
   s.rubygems_version = "2.4.0"
   s.summary = "A lightweight framework for doing http-connections in Ruby. Supports cookies, keep-alive, compressing and much more."
 
-  s.add_runtime_dependency("string-cases", "~> 0")
+  s.add_runtime_dependency("string-cases", ">= 0")
   s.add_development_dependency("best_practice_project")
   s.add_development_dependency("bundler", ">= 1.0.0")
   s.add_development_dependency("json")
-  s.add_development_dependency("hayabusa", "~> 0.0.28")
+  s.add_development_dependency("hayabusa", ">= 0.0.30")
   s.add_development_dependency("rake")
   s.add_development_dependency("rdoc")
   s.add_development_dependency("rspec")
@@ -37,4 +37,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency("rubocop-rake")
   s.add_development_dependency("rubocop-rspec")
   s.add_development_dependency("sqlite3")
+  s.add_development_dependency "wref", ">= 0.0.8"
 end
