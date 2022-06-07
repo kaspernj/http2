@@ -11,7 +11,6 @@ Gem::Specification.new do |s|
     "README.md"
   ]
   s.files = Dir["{include,lib}/**/*"] + ["Rakefile"]
-  s.test_files = Dir["spec/**/*"]
   s.homepage = "http://github.com/kaspernj/http2"
   s.licenses = ["MIT"]
   s.rubygems_version = "2.4.0"
