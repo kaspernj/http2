@@ -13,7 +13,6 @@ Gem::Specification.new do |s|
   s.files = Dir["{include,lib}/**/*"] + ["Rakefile"]
   s.homepage = "http://github.com/kaspernj/http2"
   s.licenses = ["MIT"]
-  s.rubygems_version = "2.4.0"
   s.summary = "A lightweight framework for doing http-connections in Ruby. Supports cookies, keep-alive, compressing and much more."
   s.metadata["rubygems_mfa_required"] = "true"
   s.required_ruby_version = ">= 2.7"
