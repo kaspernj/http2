@@ -54,11 +54,11 @@ GEM
       datet
       http2
       string-strtr
-    psych (4.0.3)
+    psych (5.0.0)
       stringio
     rainbow (3.1.1)
     rake (13.0.6)
-    rdoc (6.4.0)
+    rdoc (6.5.0)
       psych (>= 4.0.0)
     regexp_parser (2.6.1)
     rexml (3.2.5)
@@ -104,7 +104,7 @@ GEM
       mini_portile2 (~> 2.8.0)
     string-cases (0.0.4)
     string-strtr (0.0.3)
-    stringio (3.0.1)
+    stringio (3.0.2)
     tpool (0.0.4)
     tsafe (0.0.12)
     unicode-display_width (2.3.0)
