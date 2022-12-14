@@ -104,7 +104,7 @@ describe "Http2" do
 
   it "raises an error when something is not found" do
     with_http do |http|
-      expect { http.get("something_that_does_not_exist.rhtml") }.to raise_error(::Http2::Errors::Notfound)
+      expect { http.get("something_that_does_not_exist.rhtml") }.to raise_error(Http2::Errors::Notfound)
     end
   end
 

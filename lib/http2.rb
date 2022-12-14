@@ -1,6 +1,6 @@
 require "socket"
 require "uri"
-require "monitor" unless ::Kernel.const_defined?(:Monitor)
+require "monitor" unless Kernel.const_defined?(:Monitor)
 require "string-cases"
 
 # This class tries to emulate a browser in Ruby without any visual stuff.
