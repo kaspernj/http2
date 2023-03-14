@@ -48,7 +48,7 @@ GEM
     mini_mime (1.1.2)
     mini_portile2 (2.8.1)
     parallel (1.22.1)
-    parser (3.2.1.0)
+    parser (3.2.1.1)
       ast (~> 2.4.1)
     php4r (0.0.4)
       datet
@@ -75,7 +75,7 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.12.0)
     rspec-support (3.12.0)
-    rubocop (1.48.0)
+    rubocop (1.48.1)
       json (~> 2.3)
       parallel (~> 1.10)
       parser (>= 3.2.0.0)
