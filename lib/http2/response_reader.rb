@@ -261,7 +261,7 @@ private
       puts "Http2: Adding #{line.to_s.bytesize} to the body." if @debug
       @response.body << line
       @http2.on_content_call(@args, line)
-      return :break if @response.content_length && @response.body.length >= @response.content_length
+      return :break if @response.content_length && @response.body.length >= @response.content_length # rubocop:disable Style/RedundantReturn
     end
   end
 
