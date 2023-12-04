@@ -193,7 +193,7 @@ class Http2
     cstr = ""
 
     first = true
-    @cookies.each do |_cookie_name, cookie|
+    @cookies.each_value do |cookie|
       cstr << "; " unless first
       first = false if first
       ensure_single_lines([cookie.name, cookie.value])
