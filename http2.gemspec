@@ -17,5 +17,5 @@ Gem::Specification.new do |s|
   s.metadata["rubygems_mfa_required"] = "true"
   s.required_ruby_version = ">= 2.7"
 
-  s.add_runtime_dependency("string-cases", ">= 0")
+  s.add_dependency("string-cases", ">= 0")
 end
