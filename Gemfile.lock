@@ -116,7 +116,7 @@ GEM
     tsafe (0.0.12)
     unicode-display_width (2.5.0)
     weakling (0.0.3)
-    wref (0.0.9)
+    wref (0.0.10)
       ref
       weakling
 
