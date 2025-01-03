@@ -115,10 +115,8 @@ GEM
     unicode-display_width (3.1.2)
       unicode-emoji (~> 4.0, >= 4.0.4)
     unicode-emoji (4.0.4)
-    weakling (0.0.3)
-    wref (0.0.10)
+    wref (0.0.11)
       ref
-      weakling
 
 PLATFORMS
   ruby
