@@ -135,6 +135,9 @@ Style/LambdaCall:
 Style/MultipleComparison:
   Enabled: false
 
+Style/RedundantCondition:
+  Enabled: false
+
 Style/RegexpLiteral:
   Enabled: false
 
@@ -159,3 +162,6 @@ Style/SymbolArray:
 Style/TrivialAccessors:
   ExactNameMatch: true
   Enabled: true
+
+Lint/UselessConstantScoping:
+  Enabled: false
