@@ -21,9 +21,12 @@ GEM
       wref (~> 0.0.8)
     best_practice_project (0.0.12)
       auto_autoloader (>= 0.0.5)
+    cgi (0.4.2)
     date (3.4.1)
     datet (0.0.25)
     diff-lcs (1.5.1)
+    erb (4.0.4)
+      cgi (>= 0.3.3)
     erubis (2.7.0)
     event_handler (0.0.0)
     hayabusa (0.0.30)
@@ -59,13 +62,14 @@ GEM
       http2
       string-strtr
     prism (1.4.0)
-    psych (5.2.3)
+    psych (5.2.6)
       date
       stringio
     racc (1.8.1)
     rainbow (3.1.1)
     rake (13.2.1)
-    rdoc (6.13.1)
+    rdoc (6.14.0)
+      erb
       psych (>= 4.0.0)
     ref (2.0.0)
     regexp_parser (2.10.0)
@@ -115,7 +119,7 @@ GEM
       mini_portile2 (~> 2.8.0)
     string-cases (0.0.4)
     string-strtr (0.0.3)
-    stringio (3.1.6)
+    stringio (3.1.7)
     tpool (0.0.4)
     tsafe (0.0.12)
     unicode-display_width (3.1.4)
