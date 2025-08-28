@@ -216,7 +216,7 @@ private
       key = match[1].downcase
       set_header_special_values(key, match[2])
       parse_normal_header(line, key, match[1], match[2])
-    elsif (match = line.match(/^HTTP\/([\d\.]+)\s+(\d+)\s+(.+)$/))
+    elsif (match = line.match(/^HTTP\/([\d.]+)\s+(\d+)\s+(.+)$/))
       @response.code = match[2]
       @response.http_version = match[1]
       @http2.on_content_call(@args, line)
