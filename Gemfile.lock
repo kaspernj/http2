@@ -39,7 +39,7 @@ GEM
       ruby_process
       tpool
       wref (>= 0.0.6)
-    json (2.15.1)
+    json (2.15.2)
     knjrbfw (0.0.114)
       datet
       http2
