@@ -22,7 +22,7 @@ GEM
     best_practice_project (0.0.12)
       auto_autoloader (>= 0.0.5)
     cgi (0.5.0)
-    date (3.4.1)
+    date (3.5.0)
     datet (0.0.25)
     diff-lcs (1.6.2)
     erb (4.0.4)
@@ -68,7 +68,7 @@ GEM
     racc (1.8.1)
     rainbow (3.1.1)
     rake (13.3.1)
-    rdoc (6.15.0)
+    rdoc (6.15.1)
       erb
       psych (>= 4.0.0)
       tsort
