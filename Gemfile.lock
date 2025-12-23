@@ -21,8 +21,8 @@ GEM
       wref (~> 0.0.8)
     best_practice_project (0.0.12)
       auto_autoloader (>= 0.0.5)
-    cgi (0.5.0)
-    date (3.5.0)
+    cgi (0.5.1)
+    date (3.5.1)
     datet (0.0.25)
     diff-lcs (1.6.2)
     erb (4.0.4)
@@ -62,13 +62,13 @@ GEM
       http2
       string-strtr
     prism (1.6.0)
-    psych (5.2.6)
+    psych (5.3.1)
       date
       stringio
     racc (1.8.1)
     rainbow (3.1.1)
     rake (13.3.1)
-    rdoc (6.17.0)
+    rdoc (7.0.2)
       erb
       psych (>= 4.0.0)
       tsort
@@ -121,7 +121,7 @@ GEM
       mini_portile2 (~> 2.8.0)
     string-cases (0.0.4)
     string-strtr (0.0.3)
-    stringio (3.1.9)
+    stringio (3.2.0)
     tpool (0.0.4)
     tsafe (0.0.12)
     tsort (0.2.0)
