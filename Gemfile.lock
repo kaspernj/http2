@@ -7,6 +7,8 @@ PATH
 GEM
   remote: http://rubygems.org/
   specs:
+    addressable (2.8.8)
+      public_suffix (>= 2.0.2, < 8.0)
     array_enumerator (0.0.10)
     ast (2.4.3)
     auto_autoloader (0.0.5)
@@ -21,6 +23,7 @@ GEM
       wref (~> 0.0.8)
     best_practice_project (0.0.12)
       auto_autoloader (>= 0.0.5)
+    bigdecimal (3.3.1)
     cgi (0.5.1)
     date (3.5.1)
     datet (0.0.25)
@@ -40,6 +43,9 @@ GEM
       tpool
       wref (>= 0.0.6)
     json (2.18.1)
+    json-schema (5.2.2)
+      addressable (~> 2.8)
+      bigdecimal (~> 3.1)
     knjrbfw (0.0.114)
       datet
       http2
@@ -51,10 +57,12 @@ GEM
     lint_roller (1.1.0)
     mail (2.7.1)
       mini_mime (>= 0.1.1)
+    mcp (0.7.1)
+      json-schema (>= 4.1)
     mini_mime (1.1.2)
     mini_portile2 (2.8.5)
     parallel (1.27.0)
-    parser (3.3.10.1)
+    parser (3.3.10.2)
       ast (~> 2.4.1)
       racc
     php4r (0.0.4)
@@ -65,6 +73,7 @@ GEM
     psych (5.3.1)
       date
       stringio
+    public_suffix (5.1.1)
     racc (1.8.1)
     rainbow (3.1.1)
     rake (13.3.1)
@@ -87,10 +96,11 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
     rspec-support (3.13.6)
-    rubocop (1.84.2)
+    rubocop (1.85.0)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
       lint_roller (~> 1.1.0)
+      mcp (~> 0.6)
       parallel (~> 1.10)
       parser (>= 3.3.0.2)
       rainbow (>= 2.2.2, < 4.0)
