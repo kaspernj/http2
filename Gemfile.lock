@@ -7,7 +7,7 @@ PATH
 GEM
   remote: http://rubygems.org/
   specs:
-    addressable (2.8.8)
+    addressable (2.8.9)
       public_suffix (>= 2.0.2, < 8.0)
     array_enumerator (0.0.10)
     ast (2.4.3)
@@ -57,7 +57,7 @@ GEM
     lint_roller (1.1.0)
     mail (2.7.1)
       mini_mime (>= 0.1.1)
-    mcp (0.7.1)
+    mcp (0.8.0)
       json-schema (>= 4.1)
     mini_mime (1.1.2)
     mini_portile2 (2.8.5)
@@ -96,7 +96,7 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
     rspec-support (3.13.6)
-    rubocop (1.85.0)
+    rubocop (1.85.1)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
       lint_roller (~> 1.1.0)
