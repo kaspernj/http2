@@ -10,6 +10,10 @@ builds:
       - "Rakefile"
       - "http2.gemspec"
       - "peak_flow.yml"
+      - ".ruby-version"
+      - ".rspec"
+      - ".rubocop.yml"
+      - ".rubocop_todo.yml"
       - "!README.md"
       - "!LICENSE.txt"
     environment:
@@ -27,6 +31,10 @@ builds:
       - "Rakefile"
       - "http2.gemspec"
       - "peak_flow.yml"
+      - ".ruby-version"
+      - ".rspec"
+      - ".rubocop.yml"
+      - ".rubocop_todo.yml"
       - "!README.md"
       - "!LICENSE.txt"
     environment:
@@ -44,6 +52,10 @@ builds:
       - "Rakefile"
       - "http2.gemspec"
       - "peak_flow.yml"
+      - ".ruby-version"
+      - ".rspec"
+      - ".rubocop.yml"
+      - ".rubocop_todo.yml"
       - "!README.md"
       - "!LICENSE.txt"
     environment:
@@ -61,6 +73,10 @@ builds:
       - "Rakefile"
       - "http2.gemspec"
       - "peak_flow.yml"
+      - ".ruby-version"
+      - ".rspec"
+      - ".rubocop.yml"
+      - ".rubocop_todo.yml"
       - "!README.md"
       - "!LICENSE.txt"
     name: Linters
